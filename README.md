@@ -25,6 +25,7 @@
 | `english-cards.html` | собранная версия — один файл, всё встроено |
 | `tools/build.js` | сборка `english-cards.html` |
 | `tools/merge.js`, `tools/fix.js`, `tools/merge_ro.js` | добавление слов, правки словаря, румынские переводы |
+| `BACKUP.md` | где хранятся данные учеников, резервная копия и восстановление |
 | `PROMPTS.md` | запросы, по которым создавалось приложение |
 | `DEPLOY.md` | публикация на GitHub Pages |
 | `NEXT_STEPS.md` | что осталось сделать (next steps) |
