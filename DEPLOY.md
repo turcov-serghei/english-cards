@@ -53,3 +53,15 @@ gh api -X POST repos/turcov-serghei/english-cards/pages -f 'source[branch]=main'
 - [ ] Тесты проходятся до конца, результаты сохраняются.
 - [ ] Профиль ученика сохраняется после перезагрузки страницы.
 - [ ] Сайт открывается и работает на телефоне.
+
+## Если сайт не появился
+
+Если Pages включён, но во вкладке **Actions** нет ни одной сборки «pages build and deployment» — сборка просто ещё ни разу не запускалась (она запускается при отправке изменений). Запустить можно пустым коммитом:
+
+```bash
+git commit --allow-empty -m "Trigger GitHub Pages build" && git push origin main
+```
+
+Через ~1 минуту в **Actions** появится сборка; зелёная галочка — сайт готов.
+
+Блок «Visibility · GitHub Enterprise» в настройках Pages не нужен (это платное закрытие сайта от посторонних) — «Start free for 30 days» не нажимать.
