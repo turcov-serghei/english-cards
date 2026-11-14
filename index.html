@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Карточки: английский и румынский</title>
+<style>
+  :root{--bg:#fff8ec;--card:#fff;--ink:#2b2d42;--muted:#7a7f99;--pri:#4f7cff;--ok:#2bb673;--bad:#ef476f;--yel:#ffd166;--rad:22px}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Nunito","Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+  header{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#fff;box-shadow:0 2px 10px #0001;position:sticky;top:0;z-index:5}
+  header h1{font-size:20px;margin:0;flex:1;cursor:pointer}
+  button{font:inherit;cursor:pointer;border:none;border-radius:14px;padding:10px 16px;background:#eef1ff;color:var(--ink);transition:transform .08s,background .2s}
+  button:active{transform:scale(.96)}
+  button.pri{background:var(--pri);color:#fff;font-weight:700}
+  button.big{font-size:20px;padding:14px 22px}
+  .wrap{max-width:860px;margin:0 auto;padding:16px}
+  .panel{background:var(--card);border-radius:var(--rad);padding:18px;box-shadow:0 4px 18px #0000000d;margin-bottom:16px}
+  .panel h2{margin:0 0 12px;font-size:18px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:8px 12px;border-radius:999px;background:#f1f2f7;font-size:15px;user-select:none}
+  .chip.on{background:var(--pri);color:#fff}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .mode{padding:22px;border-radius:var(--rad);font-size:22px;font-weight:800;text-align:center}
+  .mode small{display:block;font-weight:400;font-size:14px;margin-top:6px;opacity:.85}
+  .mode.learn{background:#ffe8a3}.mode.test{background:#bfe9d4}
+  .muted{color:var(--muted);font-size:14px}
+  /* learn card */
+  .card{background:#fff;border-radius:28px;box-shadow:0 8px 30px #0000001a;padding:24px;text-align:center;min-height:380px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;user-select:none}
+  .pic{font-size:150px;line-height:1.1;min-height:170px;display:flex;align-items:center;justify-content:center}
+  .pic img{max-width:260px;max-height:200px;border-radius:16px;object-fit:contain}
+  .pic.txt{font-size:110px;font-weight:900;color:var(--pri)}
+  .en{font-size:48px;font-weight:900;letter-spacing:.5px}
+  .ru{font-size:24px;color:var(--muted)}
+  .ru.hidden{filter:blur(8px);cursor:pointer}
+  .catlbl{font-size:13px;color:var(--muted);background:#f1f2f7;padding:4px 10px;border-radius:999px}
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-top:16px;gap:10px}
+  .say{font-size:28px;background:var(--yel);border-radius:50%;width:64px;height:64px;padding:0}
+  .progress{height:10px;background:#e7e9f3;border-radius:99px;overflow:hidden;margin-bottom:14px}
+  .progress div{height:100%;background:var(--ok);transition:width .3s}
+  /* test */
+  .q{text-align:center;margin-bottom:14px}
+  .q .pic{font-size:130px}
+  .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .opt{background:#fff;border:3px solid #e4e7f2;border-radius:20px;padding:18px 8px;font-size:26px;font-weight:800;min-height:90px;display:flex;align-items:center;justify-content:center;flex-direction:column}
+  .opt .pic{font-size:70px;min-height:80px}
+  .opt .pic img{max-width:120px;max-height:90px}
+  .opt .pic.txt{font-size:60px}
+  .opt.ok{background:#d9f7e8;border-color:var(--ok)}
+  .opt.bad{background:#ffe0e7;border-color:var(--bad)}
+  .opt:disabled{cursor:default}
+  .score{display:flex;justify-content:space-between;font-weight:700;margin-bottom:8px}
+  .result{text-align:center}
+  .result .stars{font-size:60px}
+  .mist{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+  .mist span{background:#ffe0e7;border-radius:12px;padding:6px 10px}
+  input,select{font:inherit;padding:10px;border-radius:12px;border:2px solid #e4e7f2;width:100%}
+  .form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  td{padding:6px;border-bottom:1px solid #eee}
+  .hide{display:none!important}
+  .pic svg.psvg{width:1.25em;height:1.05em}
+  .panel.cpt{padding:12px 16px;margin-bottom:10px}
+  .chips.sm{gap:6px} .chips.sm .chip{padding:6px 10px;font-size:14px}
+  .actionbar{position:sticky;bottom:0;z-index:4;margin:12px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    background:var(--bg);box-shadow:0 -6px 14px -8px #0000002e}
+  .actionbar .modes{gap:10px} .actionbar .mode{padding:16px 10px;font-size:21px;box-shadow:0 4px 14px #0000001f}
+  .grades{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+  .grades .chip{text-align:center;padding:8px 0;font-size:15px;border-radius:12px;cursor:pointer;white-space:nowrap}
+  .grades .chip b{font-size:17px} .grades .chip{min-width:0;overflow:hidden}
+  @media (max-width:560px){
+    .actionbar .modes{grid-template-columns:1fr 1fr}.actionbar .mode{font-size:17px;padding:13px 6px}
+    .grades{grid-template-columns:repeat(4,1fr);gap:5px} .grades .chip{font-size:13px;padding:7px 0} .grades .chip b{font-size:15px}
+    #catBtn{padding:6px 10px;font-size:14px}
+    header{padding:8px 10px;gap:6px} header h1{font-size:16px} header button{padding:8px 10px}
+    #appTitle .long{display:none}
+  }
+  .passbar{position:relative;height:18px;background:#e7e9f3;border-radius:99px;margin:22px auto 8px;max-width:520px}
+  .passbar .fill{height:100%;border-radius:99px}.passbar .fill.ok{background:var(--ok)}.passbar .fill.bad{background:var(--bad)}
+  .passbar .mark{position:absolute;top:-6px;bottom:-6px;width:3px;background:var(--ink);border-radius:2px}
+  .passbar .mark span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-size:12px;white-space:nowrap;color:var(--ink);font-weight:700}
+  .chip.part{background:#cfdcff;color:var(--ink)}
+  .sayres{font-size:18px;min-height:26px;text-align:center;flex-basis:100%}
+  .sayres.ok{color:var(--ok);font-weight:800} .sayres.bad{color:var(--bad);font-weight:800}
+  button.listening{background:var(--bad)!important;color:#fff;animation:pp 1s infinite}
+  .mic-big{width:120px;height:120px;border-radius:50%;font-size:56px;padding:0}
+  /* ---- animated actions ---- */
+  .pic img.anim{width:1em;height:1em;max-width:none;max-height:none}
+  .act{display:inline-block;position:relative}
+  .a-run{animation:aRun 1.2s ease-in-out infinite}
+  @keyframes aRun{0%{transform:translateX(35%)}25%{transform:translateX(10%) translateY(-12%)}50%{transform:translateX(-15%)}75%{transform:translateX(-35%) translateY(-12%)}100%{transform:translateX(35%)}}
+  .a-walk{animation:aWalk 2.4s linear infinite}
+  @keyframes aWalk{0%{transform:translateX(30%) rotate(0)}25%{transform:translateX(15%) rotate(-5deg)}50%{transform:translateX(0) rotate(0)}75%{transform:translateX(-15%) rotate(5deg)}100%{transform:translateX(30%) rotate(0)}}
+  .a-swim{animation:aSwim 1.6s ease-in-out infinite}
+  @keyframes aSwim{0%,100%{transform:translate(20%,0) rotate(-6deg)}50%{transform:translate(-20%,10%) rotate(6deg)}}
+  .a-drink{animation:aDrink 1.8s ease-in-out infinite;transform-origin:50% 90%}
+  @keyframes aDrink{0%,100%{transform:rotate(0)}40%,60%{transform:rotate(-35deg) translateY(-8%)}}
+  .a-wash{animation:aWash .6s ease-in-out infinite}
+  @keyframes aWash{0%,100%{transform:translateX(-18%) rotate(-12deg)}50%{transform:translateX(18%) rotate(12deg)}}
+  .a-sing{animation:aSing 1s ease-in-out infinite}
+  @keyframes aSing{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg) scale(1.05)}}
+  .a-sing::after,.a-wash::after{position:absolute;font-size:.4em;top:0;right:-.3em;animation:aFloat 1.6s ease-out infinite}
+  .a-sing::after{content:'🎵'} .a-wash::after{content:'🫧'}
+  @keyframes aFloat{0%{opacity:0;transform:translateY(40%)}30%{opacity:1}100%{opacity:0;transform:translateY(-120%) translateX(30%)}}
+  @media (prefers-reduced-motion: reduce){.act,.act::after{animation:none!important}}
+  .profs{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+  .prof{background:#fff;border:3px solid #e4e7f2;border-radius:20px;padding:14px;text-align:center;cursor:pointer;position:relative}
+  .prof.cur{border-color:var(--pri);background:#eef3ff}
+  .prof .av{font-size:54px}
+  .prof .nm{font-size:20px;font-weight:800}
+  .prof .ed{position:absolute;top:6px;right:6px;padding:4px 8px;font-size:14px}
+  .avs .chip{font-size:26px;padding:4px 8px}
+  .hist td{white-space:nowrap}
+  .hist td.hcats{white-space:normal;font-size:18px;letter-spacing:2px;max-width:220px;cursor:help}
+  .big-num{font-size:30px;font-weight:900;color:var(--pri)}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;text-align:center}
+  .tiles>div{background:#f6f7fb;border-radius:16px;padding:10px}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);opacity:0;background:#2b2d42;color:#fff;padding:12px 18px;border-radius:14px;z-index:100;transition:.3s;max-width:90vw;text-align:center;pointer-events:none}
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  .tr{font-size:20px;color:var(--pri);display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+  .tr .ipa{font-family:"Lucida Sans Unicode","Arial Unicode MS","Segoe UI",sans-serif}
+  .tr .rus{color:#e07a00}
+  textarea{font:inherit;font-size:13px;width:100%;min-height:90px;border-radius:12px;border:2px solid #e4e7f2;padding:8px}
+  .shake{animation:sh .35s}
+  @keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  .pop{animation:pp .35s}
+  @keyframes pp{50%{transform:scale(1.06)}}
+  @media (max-width:560px){.en{font-size:38px}.pic{font-size:120px}.modes{grid-template-columns:1fr}.opt{font-size:21px}.form{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+<header>
+  <h1 id="appTitle" onclick="go('home')">🇬🇧 Английский: карточки</h1>
+  <button id="btnWho" onclick="go('profiles')" title="Сменить ученика">👤</button>
+  <button onclick="go('history')" title="Мои результаты">📈</button>
+  <button id="btnHome" onclick="go('home')">🏠</button>
+</header>
+
+<div class="wrap">
+
+<!-- ========== PROFILES ========== -->
+<section id="profiles" class="hide">
+  <div class="panel">
+    <h2>👋 Кто сейчас учится?</h2>
+    <div class="profs" id="profList"></div>
+    <p class="muted" id="profHint"></p>
+  </div>
+  <div class="panel">
+    <h2 id="pfTitle">➕ Новый ученик</h2>
+    <div class="form">
+      <input id="pfName" placeholder="Имя">
+      <input id="pfAge" type="number" min="4" max="18" placeholder="Возраст">
+      <select id="pfGrade"></select>
+      <div></div>
+    </div>
+    <p class="muted" style="margin:10px 0 6px">Картинка-аватар:</p>
+    <div class="chips avs" id="pfAvs"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="pri" onclick="saveProfile()">💾 Сохранить</button>
+      <button id="pfCancel" class="hide" onclick="editProfile(null)">Отмена</button>
+      <button id="pfDel" class="hide" onclick="delProfile(this)">🗑 Удалить ученика</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>💾 Резервная копия</h2>
+    <p class="muted">Все ученики, их результаты и «Мои слова» хранятся в этом браузере. Чтобы перенести их на другое устройство или не потерять — скопируй код и сохрани (например, в заметках), а потом вставь его здесь.</p>
+    <div class="row"><button onclick="copyBackup()">📋 Скопировать код</button><button onclick="restoreBackup()">📥 Восстановить из кода</button></div>
+    <textarea id="bkTxt" placeholder="Сюда вставь код резервной копии" style="margin-top:8px"></textarea>
+  </div>
+</section>
+
+<!-- ========== HISTORY ========== -->
+<section id="history" class="hide">
+  <div class="panel" id="histBox"></div>
+</section>
+
+<!-- ========== HOME ========== -->
+<section id="home" class="hide">
+  <div class="panel cpt">
+    <div class="row" style="justify-content:space-between" id="hello"></div>
+    <div class="chips sm" id="langs" style="margin-top:8px"></div>
+  </div>
+  <div class="panel cpt">
+    <div class="row" style="justify-content:space-between;flex-wrap:nowrap">
+      <h2 style="margin:0;font-size:17px">📚 Темы: <span id="catSum" style="font-weight:400"></span></h2>
+      <button id="catBtn" onclick="S.catsOpen=!S.catsOpen;save();renderHome()"></button>
+    </div>
+    <div id="catBox" style="margin-top:10px">
+      <div class="chips sm" id="cats"></div>
+      <div class="row" style="margin-top:8px">
+        <button onclick="setAllCats(true)">Все темы</button>
+        <button onclick="setAllCats(false)">Снять все</button>
+      </div>
+    </div>
+  </div>
+  <div class="panel cpt">
+    <h2 style="margin:0 0 8px">🎒 Класс <span class="muted" style="font-weight:400;font-size:14px">(класс — сколько слов)</span></h2>
+    <div class="chips sm" id="lvls"></div>
+  </div>
+  <div class="row" style="justify-content:center">
+    <button onclick="startLearn(true)">😓 Трудные слова</button>
+    <button onclick="go('add')">➕ Мои слова</button>
+    <button onclick="go('settings')">⚙️ Настройки</button>
+  </div>
+  <div class="actionbar">
+    <div class="muted" id="countInfo" style="text-align:center;margin-bottom:6px"></div>
+    <div class="modes">
+      <button class="mode learn" onclick="startLearn()">📖 Учить</button>
+      <button class="mode test" onclick="go('testSetup')">✅ Проверить себя</button>
+    </div>
+  </div>
+</section>
+
+<!-- ========== LEARN ========== -->
+<section id="learn" class="hide">
+  <div class="progress"><div id="lProg"></div></div>
+  <div class="card" id="lCard" onclick="speakCur()">
+    <span class="catlbl" id="lCat"></span>
+    <div class="pic" id="lPic"></div>
+    <div class="en" id="lEn"></div>
+    <div class="tr" id="lTr"></div>
+    <div class="ru" id="lRu" onclick="event.stopPropagation();this.classList.remove('hidden')"></div>
+  </div>
+  <div class="nav">
+    <button class="big" onclick="lMove(-1)">⬅️</button>
+    <button class="say" onclick="speakCur()">🔊</button>
+    <span class="muted" id="lNum"></span>
+    <button class="say" style="background:#eef1ff" title="Медленно" onclick="speakCur(0.55)">🐢</button>
+    <button class="big" onclick="lMove(1)">➡️</button>
+  </div>
+  <div class="row microw" id="lMicRow" style="justify-content:center;margin-top:12px">
+    <button class="pri big" id="lMic" onclick="pronClick()">🎤 Скажи сам</button>
+    <div id="lPronExtra" class="row hide" style="justify-content:center;flex-basis:100%"></div>
+    <div id="lMicNote" class="muted hide" style="text-align:center">🎤 Произношение здесь не проверить — распознавание речи недоступно в этом браузере (подробнее: ⚙️ Настройки → Микрофон)</div>
+    <div id="lSayRes" class="sayres"></div>
+  </div>
+  <div class="row" style="justify-content:center;margin-top:14px">
+    <label class="chip"><input type="checkbox" id="hideRu" style="width:auto" onchange="lShow()"> прятать перевод</label>
+    <button onclick="shuffleLearn()">🔀 Перемешать</button>
+    <button class="pri" onclick="go('testSetup')">✅ Проверить эти слова</button>
+  </div>
+</section>
+
+<!-- ========== TEST SETUP ========== -->
+<section id="testSetup" class="hide">
+  <div class="panel">
+    <h2>Какой класс проверяем?</h2>
+    <div class="chips" id="tLvls"></div>
+  </div>
+  <div class="panel">
+    <h2>Сколько слов?</h2>
+    <div class="chips" id="lens"></div>
+  </div>
+  <div class="panel">
+    <h2>Как спрашивать? <span class="muted" style="font-weight:400;font-size:14px">(можно выбрать несколько)</span></h2>
+    <div class="chips" id="qtypes"></div>
+  </div>
+  <p class="muted" id="tInfo"></p>
+  <button class="pri big" onclick="startTest()">🚀 Начать!</button>
+</section>
+
+<!-- ========== TEST ========== -->
+<section id="test" class="hide">
+  <div class="score"><span id="tNum"></span><span id="tScore"></span></div>
+  <div class="progress"><div id="tProg"></div></div>
+  <div class="panel q" id="tQ"></div>
+  <div class="opts" id="tOpts"></div>
+  <div class="row" style="justify-content:center;margin-top:16px">
+    <button onclick="endTest()">🏁 Закончить</button>
+  </div>
+</section>
+
+<!-- ========== RESULT ========== -->
+<section id="result" class="hide">
+  <div class="panel result" id="rBox"></div>
+</section>
+
+<!-- ========== ADD WORDS ========== -->
+<section id="add" class="hide">
+  <div class="panel">
+    <h2>➕ Добавить своё слово</h2>
+    <div class="form">
+      <input id="aEn" placeholder="Английское слово (dog)">
+      <input id="aRu" placeholder="Перевод (собака)">
+      <input id="aImg" placeholder="Эмодзи 🐶 или ссылка на картинку https://...">
+      <label class="chip" style="cursor:pointer;text-align:center">🖼️ Загрузить картинку с устройства<input type="file" accept="image/*" style="display:none" onchange="loadPic(this)"></label>
+      <input id="aTr" placeholder="Транскрипция (dɒɡ) — необязательно">
+      <input id="aTrRu" placeholder="Русскими буквами (дог) — необязательно">
+      <input id="aRo" placeholder="🇷🇴 По-румынски (câine) — необязательно">
+      <input id="aRoRu" placeholder="🇷🇴 Русскими буквами (кЫйне) — необязательно">
+      <input id="aCat" placeholder="Тема (например: Мои слова)" list="catList">
+      <select id="aLvl"><option value="1">1 класс</option><option value="2">2 класс</option><option value="3">3 класс</option><option value="4">4 класс</option><option value="5">5 класс</option><option value="6">6 класс</option><option value="7">7 класс</option><option value="8">8 класс</option><option value="9">9 класс</option><option value="10">10 класс</option><option value="11">11 класс</option><option value="12">12 класс</option></select>
+      <button class="pri" onclick="addWord()">Добавить</button>
+    </div>
+    <datalist id="catList"></datalist>
+    <p class="muted">Картинку можно найти в интернете: правый клик по картинке → «Копировать адрес изображения» и вставить сюда. Слова сохраняются в этом браузере. В онлайн-версии картинки по ссылкам не показываются — загружайте файл с устройства или используйте эмодзи.</p>
+    <div id="picPrev"></div>
+  </div>
+  <div class="panel">
+    <h2>Мои слова (<span id="myCount">0</span>)</h2>
+    <table id="myTable"></table>
+    <div class="row" style="margin-top:10px">
+      <button id="btnExport" onclick="exportMine()">💾 Сохранить в файл</button>
+      <button onclick="copyMine()">📋 Скопировать список</button>
+      <label class="chip" style="cursor:pointer">📂 Загрузить из файла<input type="file" accept=".json" style="display:none" onchange="importMine(this)"></label>
+    </div>
+    <p class="muted">Перенести слова на другое устройство: скопируй список и вставь его здесь на другом устройстве.</p>
+    <textarea id="mineTxt" placeholder="Сюда можно вставить скопированный список слов"></textarea>
+    <button onclick="importText(mineTxt.value)">📥 Загрузить из текста</button>
+  </div>
+</section>
+
+<!-- ========== SETTINGS ========== -->
+<section id="settings" class="hide">
+  <div class="panel">
+    <h2 style="margin-top:0">🌍 Язык</h2>
+    <div class="chips" id="setLangs" style="margin-bottom:14px"></div>
+    <h2 id="voiceTitle">🔊 Голос</h2>
+    <p class="muted">Голос настраивается отдельно для каждого языка — переключите язык выше, чтобы настроить другой.</p>
+    <p id="voiceInfo" style="font-size:14px"></p>
+    <select id="voiceSel" onchange="S[vKey()]=this.value;save();renderVoiceInfo();speak(S.lang==='ro'?'Bună! Hai să învățăm românește!':'Hello! Let\'s learn English!')"></select>
+    <p class="muted">Скорость речи</p>
+    <input type="range" min="0.5" max="1.2" step="0.05" id="rate" onchange="S.rate=+this.value;save()">
+    <div class="row" style="margin-top:10px"><button onclick="speak(S.lang==='ro'?'Bună! Hai să învățăm românește!':'Hello! Let\'s learn English!')">▶️ Проверить</button></div>
+  </div>
+  <div class="panel">
+    <h2>Прочее</h2>
+    <div class="chips">
+    <label class="chip"><input type="checkbox" id="autoSay" style="width:auto" onchange="S.autoSay=this.checked;save()"> произносить слово автоматически</label>
+    <label class="chip"><input type="checkbox" id="sounds" style="width:auto" onchange="S.sounds=this.checked;save();if(S.sounds)sfx(true)"> звук правильно / неправильно</label>
+    <label class="chip"><input type="checkbox" id="showIpa" style="width:auto" onchange="S.showIpa=this.checked;save()"> транскрипция [kæt]</label>
+    <label class="chip"><input type="checkbox" id="showRu" style="width:auto" onchange="S.showRu=this.checked;save()"> русскими буквами «кэт»</label>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button onclick="if(this.dataset.sure){STATS={};PROF.hist=[];save();renderSettings();toast('Результаты сброшены');this.textContent='🗑 Сбросить результаты ученика';delete this.dataset.sure}else{this.dataset.sure=1;this.textContent='Точно сбросить? Нажми ещё раз'}">🗑 Сбросить результаты ученика</button>
+    </div>
+    <h2 style="margin-top:18px">🎤 Микрофон (ученик говорит слово)</h2>
+    <p style="margin:4px 0">Произношение в режиме «Учить»:</p>
+    <div class="chips" id="pronModes"></div>
+    <div id="whBox" class="hide" style="margin-top:10px">
+      <div class="row"><span class="muted">Модель:</span>
+        <select id="whModel" style="width:auto" onchange="S.whModel=this.value;save();WH=null;renderPron()">
+          <option value="onnx-community/whisper-base">Whisper base — точнее (~80 МБ)</option>
+          <option value="onnx-community/whisper-tiny">Whisper tiny — быстрее (~45 МБ)</option>
+        </select>
+        <button id="whLoadBtn" onclick="loadWhisperUI()">⬇️ Загрузить модель</button></div>
+      <p class="muted" id="whStatus" style="font-size:14px"></p>
+    </div>
+    <p class="muted" id="micInfo"></p>
+    <button id="micTestBtn" onclick="micTest()">🎤 Проверить микрофон</button>
+    <p id="micTestRes" style="font-size:15px"></p>
+    <h2 style="margin-top:18px">🎯 Тест сдан, если правильно не меньше</h2>
+    <select id="passPct" onchange="S.passPct=+this.value;save()"></select>
+    <p class="muted">Если результат ниже — тест не пройден, и нужно повторить обучение.</p>
+    <h2 style="margin-top:18px">📊 Статистика</h2>
+    <div id="statBox" class="muted"></div>
+    <p class="muted" style="font-size:12px;margin-top:14px">Анимации действий: <a href="https://googlefonts.github.io/noto-emoji-animation/" target="_blank" rel="noopener">Noto Animated Emoji</a> © Google, лицензия CC BY 4.0.<br>Румынская озвучка: <a href="https://github.com/OHF-Voice/piper1-gpl" target="_blank" rel="noopener">Piper</a>, голос «Liana» (<a href="https://huggingface.co/eduardem/piper-liana-romanian" target="_blank" rel="noopener">eduardem</a>, CC BY-NC 4.0).</p>
+  </div>
+</section>
+
+</div>
+
+<script src="words.js"></script>
+<script src="anim.js"></script>
+<script src="audio_ro.js"></script>
+<script>
+// ---------- data ----------
+const LS = k => {try{return JSON.parse(localStorage.getItem(k) || 'null')}catch(e){return null}};
+let MY = LS('ec_my') || [];
+const DEF = {lang:'en', voiceRo:'', cats:null, lvls:[], voice:'', rate:0.85, autoSay:true, sounds:true, passPct:80, showIpa:true, showRu:true, len:15, qtypes:null, pron:'off', whModel:'onnx-community/whisper-base'};
+// Each learner (profile) has own stats, settings and test history. "Мои слова" (MY) are shared.
+// DB = {cur: id, list: [{id, name, age, grade, av, created, stats:{en:{ok,bad}}, set:{...}, hist:[...]}]}
+let DB = LS('ec_profiles') || {cur:null, list:[]};
+// data from the version without profiles — given to the first learner created
+const LEGACY = {stats: LS('ec_stats'), set: LS('ec_set')};
+let PROF = null, STATS = {}, S = {...DEF};
+function useProfile(id){
+  PROF = DB.list.find(p=>p.id===id) || null;
+  DB.cur = PROF ? PROF.id : null;
+  STATS = PROF ? PROF.stats : {};
+  S = Object.assign({...DEF}, PROF ? PROF.set : {});
+  if(PROF) PROF.set = S;
+  migratePron();
+  save(); updateWho(); loadVoices();
+}
+function migratePron(){ if(S.micLearn){ S.pron='asr'; delete S.micLearn } }
+function save(){try{
+  if(PROF){PROF.stats=STATS;PROF.set=S}
+  localStorage.setItem('ec_my',JSON.stringify(MY));
+  localStorage.setItem('ec_profiles',JSON.stringify(DB));
+}catch(e){}}
+function updateWho(){
+  const b=document.getElementById('btnWho'); if(b) b.textContent = PROF ? `${PROF.av} ${PROF.name}` : '👤';
+  const h=document.getElementById('appTitle'); if(h) h.innerHTML = `${LG().flag} ${LG().name}<span class="long">: карточки</span>`;
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),3200)}
+
+const BASE = (typeof WORDS !== 'undefined' ? WORDS : []);
+function allWords(){
+  const map = new Map();
+  [...BASE, ...MY].forEach(w => map.set(w.en.toLowerCase(), {lvl:1, cat:'Мои слова', ...w}));
+  return [...map.values()];
+}
+function categories(){return [...new Set(allWords().map(w=>w.cat))]}
+const catOk = w => !S.cats || S.cats.includes(w.cat);
+// A grade always includes all lower grades: "3 класс" = grades 1–3. Default = the learner's grade from the profile.
+const lvlMax = () => S.lvls.length ? Math.max(...S.lvls) : (PROF ? PROF.grade : 12);
+const lvlOk = w => +w.lvl <= lvlMax();
+const lvlText = () => lvlMax()===1 ? 'слова 1 класса' : `слова 1–${lvlMax()} классов`;
+function pool(){
+  return allWords().filter(w => hasLang(w) && catOk(w) && lvlOk(w));
+}
+const shuffle = a => {a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ---------- language: 'en' or 'ro'. w.en stays the word's id; tw(w) is the word being learned ----------
+const LANGS = {en:{flag:'🇬🇧', name:'Английский', adv:'по-английски', code:'en', def:'en-GB'},
+               ro:{flag:'🇷🇴', name:'Румынский',  adv:'по-румынски',  code:'ro', def:'ro-RO'}};
+const LG = () => LANGS[S.lang] || LANGS.en;
+const tw = w => S.lang==='ro' ? (w.ro || w.en) : w.en;
+const sk = w => S.lang==='ro' ? 'ro:'+w.en : w.en;          // key in STATS
+const hasLang = w => S.lang!=='ro' || !!w.ro;
+function setLang(l){ S.lang=l; save(); loadVoices(); updateWho(); updateMicUI(); isOpen('settings') ? renderSettings() : renderHome(); }
+function trHTML(w){
+  if(S.lang==='ro') return S.showRu && w.roRu ? `<span class="rus">«${esc(w.roRu)}»</span>` : '';
+  if(!w.tr && !w.trRu) return '';
+  return (S.showIpa&&w.tr?`<span class="ipa">[${esc(w.tr)}]</span>`:'') + (S.showRu&&w.trRu?`<span class="rus">«${esc(w.trRu)}»</span>`:'');
+}
+// ---- pictures for prepositions: drawn scenes (box / table / ball / arrows), img = "svg:<name>" ----
+function prepSVG(k){
+  const box = (x,y,w=44,h=36)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="#c98b4a" stroke="#7a4f22" stroke-width="2.5"/><line x1="${x}" y1="${y+9}" x2="${x+w}" y2="${y+9}" stroke="#7a4f22" stroke-width="2"/>`;
+  const openBox = (x,y,w=50,h=38)=>`<path d="M${x} ${y} v${h} h${w} v${-h}" fill="#e9c08f" stroke="#7a4f22" stroke-width="3"/><path d="M${x} ${y} l-8 -10 M${x+w} ${y} l8 -10" stroke="#7a4f22" stroke-width="3"/>`;
+  const table = `<rect x="22" y="40" width="76" height="8" rx="2" fill="#a0612c"/><rect x="28" y="48" width="6" height="40" fill="#a0612c"/><rect x="86" y="48" width="6" height="40" fill="#a0612c"/>`;
+  const ball = (x,y,r=10,op=1)=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#ef476f" opacity="${op}"/><circle cx="${x-r*.35}" cy="${y-r*.35}" r="${r*.3}" fill="#fff" opacity="${.55*op}"/>`;
+  const floor = `<line x1="4" y1="90" x2="116" y2="90" stroke="#bbb" stroke-width="2"/>`;
+  const arr = (d)=>`<path d="${d}" fill="none" stroke="#4f7cff" stroke-width="4" stroke-linecap="round" marker-end="url(#ah)"/>`;
+  const S = {
+    'in':        floor + openBox(35,50) + ball(60,74),
+    'on':        floor + table + ball(60,29),
+    'under':     floor + table + ball(60,79),
+    'behind':    floor + ball(76,48) + box(38,54),
+    'in front of': floor + box(34,44,52,46) + ball(52,78,13),
+    'next to':   floor + box(22,54) + ball(84,79),
+    'between':   floor + box(6,54,36) + box(78,54,36) + ball(60,79),
+    'above':     floor + table + ball(60,12) + `<line x1="60" y1="24" x2="60" y2="36" stroke="#999" stroke-dasharray="3 3" stroke-width="2"/>`,
+    'below':     `<rect x="10" y="20" width="100" height="7" rx="2" fill="#a0612c"/>` + `<line x1="60" y1="30" x2="60" y2="62" stroke="#999" stroke-dasharray="3 3" stroke-width="2"/>` + ball(60,76),
+    'far from':  floor + box(4,54,30) + ball(108,79,9) + `<path d="M40 70 H96" stroke="#999" stroke-width="2" stroke-dasharray="4 3"/>`,
+    'up':        floor + ball(60,74) + arr('M60 58 V14'),
+    'down':      floor + ball(60,20) + arr('M60 36 V80'),
+    'into':      floor + openBox(50,52) + ball(20,16) + arr('M30 20 Q70 0 74 58'),
+    'out of':    floor + openBox(20,52) + ball(100,20) + arr('M44 62 Q48 4 90 18'),
+    'through':   floor + `<path d="M34 90 V44 a26 26 0 0 1 52 0 V90 h-12 V46 a14 14 0 0 0 -28 0 V90 z" fill="#9aa5b1" stroke="#5c6670" stroke-width="2"/>` + ball(12,78,8) + arr('M24 78 H104'),
+    'around':    floor + box(38,40) + `<ellipse cx="60" cy="58" rx="50" ry="30" fill="none" stroke="#4f7cff" stroke-width="4" stroke-dasharray="1 0"/>` + `<path d="M106 50 l5 10 l-12 -2" fill="#4f7cff"/>` + ball(12,58,7),
+    'over':      floor + box(42,54,36,36) + ball(12,80,8) + arr('M14 68 Q60 -6 104 76'),
+    'across':    `<rect x="0" y="6" width="120" height="34" fill="#cdeab8"/><rect x="0" y="70" width="120" height="28" fill="#cdeab8"/><rect x="0" y="40" width="120" height="30" fill="#7cc6f5"/><path d="M0 40 H120 M0 70 H120" stroke="#3a8fd0" stroke-width="2"/>` + ball(60,86,8) + arr('M60 76 V18')
+  };
+  return `<svg class="psvg" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4f7cff"/></marker></defs>${S[k]||''}</svg>`;
+}
+const isSvgImg = v => typeof v==='string' && v.startsWith('svg:');
+const miniImg = w => isSvgImg(w.img) ? '📍' : /^data:|^https?:/.test(w.img) ? '🖼️' : w.img;
+// animated pictures for actions: Noto animated emoji (anim.js) or CSS animation (.a-<word>)
+const CSS_ANIM = ['run','swim','walk','sing','drink','wash'];
+function picHTML(w){
+  const v = w.img || '❓';
+  if (isSvgImg(v)) return `<div class="pic">${prepSVG(v.slice(4))}</div>`;
+  const A = (typeof ANIM!=='undefined') ? ANIM : {};
+  if (w.cat==='Действия' && A[w.en]) return `<div class="pic"><img class="anim" src="${A[w.en]}" alt="${esc(v)}"></div>`;
+  if (w.cat==='Действия' && CSS_ANIM.includes(w.en)) return `<div class="pic"><span class="act a-${w.en}">${esc(v)}</span></div>`;
+  if (/^(https?:|data:|\.{0,2}\/)|\.(png|jpe?g|gif|svg|webp)$/i.test(v))
+    return `<div class="pic"><img src="${esc(v)}" alt="" onerror="this.parentNode.textContent='🖼️'"></div>`;
+  const isText = /^[0-9A-Za-z]+$/.test(v);
+  return `<div class="pic${isText?' txt':''}">${esc(v)}</div>`;
+}
+
+// ---------- speech ----------
+// ---------- speech ----------
+// The voice is chosen on EVERY call by the current language, so switching English/Romanian
+// always switches the reader. Order: device voice of that language -> Claude voice (published page) -> warning.
+const HAS_SS = 'speechSynthesis' in window;
+const norm = l => (l||'').replace('_','-').toLowerCase();
+function langVoices(){
+  if(!HAS_SS) return [];
+  const lc = LG().code, nameRx = S.lang==='ro' ? /roman|român|romîn/i : /english/i;
+  return speechSynthesis.getVoices().filter(v => norm(v.lang).split('-')[0]===lc || (!v.lang && nameRx.test(v.name)));
+}
+// quality score: Apple premium/enhanced, Microsoft natural, Google voices sound much better than compact ones
+function voiceScore(v){
+  const t = (v.name+' '+(v.voiceURI||'')).toLowerCase();
+  let s = 0;
+  if(/premium|премиум/.test(t)) s+=50; else if(/enhanced|улучш|améli|erweit/.test(t)) s+=40;
+  if(/natural|neural/.test(t)) s+=35; if(/online/.test(t)) s+=10; if(/google/.test(t)) s+=25;
+  if(/compact|eloquence|novelty/.test(t)) s-=20;
+  if(norm(v.lang)===norm(LG().def)) s+=5;
+  return s;
+}
+const vKey = () => S.lang==='ro' ? 'voiceRo' : 'voice';
+const CLAUDE_VOICES = {buttery:'мягкий', airy:'лёгкий', glassy:'звонкий', rounded:'глубокий'};
+// which reader to use now: {kind:'device', v} | {kind:'claude', voice} | {kind:'none'}
+function reader(){
+  const saved = S[vKey()] || '', vs = langVoices();
+  if(saved.startsWith('claude:') && CTTS) return {kind:'claude', voice:saved.slice(7)};
+  const v = vs.find(v=>v.name===saved) || vs.slice().sort((a,b)=>voiceScore(b)-voiceScore(a))[0];
+  if(v) return {kind:'device', v};
+  if(CTTS) return {kind:'claude', voice:'buttery'};
+  return {kind:'none'};
+}
+function pickVoice(){ const r = reader(); return r.kind==='device' ? r.v : null }
+let CTTS = null;   // Claude voice, only on the published page in a desktop browser
+try{ if(window.claude && claude.use) claude.use('tts').then(t=>{ CTTS=t; loadVoices() }).catch(()=>{}) }catch(e){}
+const warned = {};
+function loadVoices(){
+  const sel = document.getElementById('voiceSel'); if(!sel) return;
+  const vs = langVoices().sort((a,b)=>voiceScore(b)-voiceScore(a)), r = reader();
+  let html = (S.lang==='ro' && HAS_REC) ? `<optgroup label="Рекомендуется"><option value="rec">🎧 Записанное произношение (правильное, работает везде)</option></optgroup>` : '';
+  html += vs.length ? `<optgroup label="Голоса устройства">${vs.map(v=>`<option value="${esc(v.name)}">${voiceScore(v)>=25?'⭐ ':''}${esc(v.name)} (${v.lang})</option>`).join('')}</optgroup>` : '';
+  if(CTTS) html += `<optgroup label="Голоса Claude">${Object.entries(CLAUDE_VOICES).map(([k,n])=>`<option value="claude:${k}">✨ Claude — ${n}</option>`).join('')}</optgroup>`;
+  sel.innerHTML = html || `<option value="">На этом устройстве нет голоса (${LG().name})</option>`;
+  sel.value = useRec() ? 'rec' : r.kind==='device' ? r.v.name : r.kind==='claude' ? 'claude:'+r.voice : '';
+  renderVoiceInfo();
+}
+function renderVoiceInfo(){
+  const el = document.getElementById('voiceInfo'); if(!el) return;
+  const r = reader(), n = LG().name, vs = langVoices();
+  if(useRec()){ el.innerHTML = '✅ Читает <b>записанное произношение</b>: все румынские слова заранее озвучены нейросетевым голосом, обученным на речи румынского диктора. Работает на любом устройстве и без интернета.'; return }
+  const now = r.kind==='device' ? `✅ Читает: <b>${esc(r.v.name)}</b>${vs.length>1?` (на устройстве голосов: ${vs.length})`:''}`
+            : r.kind==='claude' ? `✅ Читает голос Claude` : `⚠️ На этом устройстве нет голоса (${n}).`;
+  const few = vs.length<=1 || (r.kind==='device' && voiceScore(r.v)<25);
+  el.innerHTML = now + (few ? `<br><br><b>Как получить голос получше (${n}):</b><br>
+    • <b>iPhone / iPad</b>: Настройки → Универсальный доступ → Устный контент → Голоса → ${S.lang==='ro'?'Румынский → Ioana':'Английский'} → скачайте версию <b>«Улучшенный»</b> или <b>«Премиум»</b> — звучит намного лучше обычной<br>
+    • <b>Mac</b>: Системные настройки → Универсальный доступ → Устный контент → Системный голос → Управление голосами → ${S.lang==='ro'?'Румынский':'Английский'} → улучшенная версия<br>
+    • <b>Android</b>: Настройки → Язык → Синтез речи → Google → установите голосовые данные «${S.lang==='ro'?'Română':'English (UK)'}»<br>
+    • <b>Windows</b>: откройте страницу в браузере <b>Edge</b> — там есть естественные голоса ${S.lang==='ro'?'Alina и Emil':'Libby, Ryan, Sonia'}<br>
+    • <b>Компьютер, опубликованная версия</b>: в списке выше есть голоса <b>✨ Claude</b> (Chrome, Edge, Firefox; не Safari)<br>
+    После установки перезапустите браузер.` : '');
+}
+if(HAS_SS){ speechSynthesis.onvoiceschanged = loadVoices; }
+// ---- recorded Romanian pronunciation (Piper, embedded) — used instead of a synthetic voice when chosen ----
+const REC_BY_TEXT = (()=>{ const m = {}; if(typeof AUDIO_RO==='undefined') return m;
+  try{ BASE.forEach(w=>{ if(w.ro && AUDIO_RO[w.en]) m[w.ro.toLowerCase()] = AUDIO_RO[w.en] }) }catch(e){} return m })();
+const HAS_REC = Object.keys(REC_BY_TEXT).length > 0;
+const useRec = () => S.lang==='ro' && HAS_REC && (S.voiceRo==='rec' || !S.voiceRo);
+let recPlayer = null;
+function playRec(text, rate, onend){
+  const src = REC_BY_TEXT[(text||'').toLowerCase()]; if(!src) return false;
+  try{ if(HAS_SS) speechSynthesis.cancel(); if(recPlayer) recPlayer.pause() }catch(e){}
+  recPlayer = new Audio(src);
+  recPlayer.playbackRate = Math.max(0.6, Math.min(1.3, (rate || S.rate) / 0.85));
+  if('preservesPitch' in recPlayer) recPlayer.preservesPitch = true;
+  if(onend) recPlayer.onended = onend;
+  recPlayer.play().catch(()=>{ if(onend) onend() });
+  return true;
+}
+function speak(text, rate){
+  if(useRec() && playRec(text, rate)) return;
+  rate = rate || S.rate;
+  const r = reader();
+  // voices not loaded yet (Chrome loads them async): let the browser pick by language, no warning
+  const loaded = HAS_SS && speechSynthesis.getVoices().length > 0;
+  if(r.kind==='claude' && (loaded || (S[vKey()]||'').startsWith('claude:'))){
+    if(HAS_SS) speechSynthesis.cancel();
+    CTTS.speak(text, {language:LG().code, voice:r.voice, rate:Math.min(1.5, Math.max(0.7, rate+0.15))}).catch(()=>{});
+    return;
+  }
+  if(!HAS_SS) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  if(r.kind==='device'){ u.voice=r.v; u.lang=r.v.lang } else {
+    u.lang = LG().def;
+    if(loaded && !warned[S.lang]){ warned[S.lang]=1; toast(`Нет голоса (${LG().name}) на этом устройстве — см. ⚙️ Настройки`) }
+  }
+  u.rate = rate; speechSynthesis.speak(u);
+}
+
+// ---------- speech recognition: the learner says the word ----------
+// Browser recognizer (has language: en-GB / ro-RO) in the file version; on the published page the
+// microphone is blocked for pages, so Claude dictation is used there (Chromium only, language auto).
+const NativeSR = window.SpeechRecognition || window.webkitSpeechRecognition;
+// On the published page (inside a frame) the browser blocks the microphone for the page itself,
+// so only Claude dictation can work there. In the file version the browser recognizer is used.
+const IN_FRAME = window.self !== window.top;
+let CDICT = null, dictHandler = null;
+try{ if(window.claude && claude.use) claude.use('dictation').then(d=>{ if(!d) return; CDICT=d;
+  d.onFinal(({text})=>dictHandler && dictHandler.final(text));
+  d.onPartial(({text})=>dictHandler && dictHandler.partial(text));
+  d.onState(({state, reason})=>{ if(state==='idle' && dictHandler) dictHandler.end(reason) });
+  updateMicUI() }).catch(()=>{}) }catch(e){}
+let nativeBlocked = false;
+const useNative = () => !!NativeSR && !nativeBlocked && !IN_FRAME;
+const canListen = () => useNative() || !!CDICT;
+const engineName = () => useNative() ? `распознавание браузера (${LG().def})` : CDICT ? 'диктовка Claude' : 'нет';
+function updateMicUI(){
+  const b = document.getElementById('lMic'), n = document.getElementById('lMicNote');
+  // pronunciation practice in learning is optional (Settings → Микрофон), off by default
+  const ok = pronAvailable();
+  if(b){ b.classList.toggle('hide', S.pron==='off' || !ok); n.classList.toggle('hide', S.pron==='off' || ok);
+         b.textContent = PRON[S.pron] ? PRON[S.pron].btn : ''; n.textContent = pronWhyNot() }
+  if(typeof isOpen==='function' && isOpen('testSetup')) renderTestSetup();
+}
+// listen once; resolves with heard variants (may be empty), rejects with an error code. Call from a click.
+function listen(){
+  return new Promise((resolve, reject)=>{
+    try{ if(HAS_SS) speechSynthesis.cancel() }catch(e){}
+    if(useNative()){
+      const r = new NativeSR(); let got = [], err = '';
+      r.lang = LG().def; r.interimResults = false; r.maxAlternatives = 5; r.continuous = false;
+      r.onresult = e => { got = [...e.results[0]].map(a=>a.transcript) };
+      r.onerror = e => { err = e.error || 'error'; if(/not-allowed|service-not-allowed/.test(err)) nativeBlocked = true };
+      r.onend = () => { if(got.length) resolve(got); else if(err && err!=='no-speech' && err!=='aborted') { updateMicUI(); reject(err) } else resolve([]) };
+      try{ r.start() }catch(e){ reject('start'); return }
+      setTimeout(()=>{ try{ r.stop() }catch(e){} }, 7000);
+    } else if(CDICT){
+      let text = '', partial = '', done = false, stopT;
+      const finish = () => { if(done) return; done = true; clearTimeout(stopT); dictHandler = null; const t = text || partial; resolve(t ? [t] : []) };
+      dictHandler = {
+        final: t => { text = (text+' '+t).trim(); CDICT.stop().catch(()=>{}); setTimeout(finish, 1500) },
+        partial: t => { partial = t },
+        end: () => setTimeout(finish, 300)
+      };
+      CDICT.start().catch(e=>{ if(done) return; done = true; dictHandler = null; reject(e && e.code || 'dict') });
+      stopT = setTimeout(()=>{ CDICT.stop().catch(()=>{}); setTimeout(finish, 2500) }, 7000);
+    } else reject('none');
+  });
+}
+const MIC_ERR = {
+  'not-allowed':'Нет доступа к микрофону — разреши микрофон для этой страницы в настройках браузера',
+  'service-not-allowed':'Распознавание речи выключено. На iPhone включите Siri и Диктовку (Настройки → Siri; Настройки → Основные → Клавиатура → Диктовка)',
+  'not_granted':'Нет доступа к микрофону — разреши его, когда браузер спросит',
+  'dismissed':'Запрос микрофона закрыт — нажми 🎤 ещё раз и разреши',
+  'audio-capture':'Микрофон не найден или занят другой программой',
+  'network':'Для распознавания нужен интернет',
+  'language-not-supported':`Распознавание языка (${LG().name}) не поддерживается этим браузером`,
+  'none':'Распознавание речи не поддерживается в этом браузере (лучше Chrome)',
+  'start':'Не удалось включить микрофон — попробуй ещё раз'
+};
+const micErr = e => MIC_ERR[e] || ('Микрофон недоступен ('+e+')');
+// settings: microphone check — shows the engine and what was heard
+async function micTest(){
+  const out = document.getElementById('micTestRes'), btn = document.getElementById('micTestBtn');
+  out.innerHTML = `Способ: <b>${engineName()}</b>. Скажи любое слово ${LG().adv}…`;
+  btn.classList.add('listening');
+  try{ const h = await listen(); out.innerHTML = `Способ: <b>${engineName()}</b><br>` + (h.length ? `✅ Услышано: «${esc(h.join(' / '))}»` : '🤔 Ничего не услышано. Говори громче и ближе к микрофону') }
+  catch(e){ out.innerHTML = `Способ: <b>${engineName()}</b><br>❌ ${esc(micErr(e))}` }
+  btn.classList.remove('listening');
+}
+
+// tolerant comparison: case, Romanian diacritics, punctuation, articles, small mistakes
+// ---- tolerant matching of what the learner said ----
+const NUMW = {en:'zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty'.split(' '),
+              ro:'zero unu doi trei patru cinci sase sapte opt noua zece unsprezece doisprezece treisprezece paisprezece cincisprezece saisprezece saptesprezece optsprezece nouasprezece douazeci'.split(' ')};
+const fold = t => (t||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')
+  .replace(/\b\d{1,2}\b/g, d => (NUMW[S.lang]||NUMW.en)[+d] || d)        // "2" -> "two"/"doi"
+  .replace(/[^a-z0-9 ]+/g,' ').replace(/\b(the|a|an|un|o)\b/g,' ').replace(/^\s*to\s+(?=\w)/,'')
+  .replace(/\s+/g,' ').trim();
+// rough "sounds like" key: spelling variants that sound the same get the same key
+function phon(t){
+  let x = fold(t).replace(/ /g,'');
+  if(S.lang==='ro') x = x.replace(/ch(?=[ei])/g,'k').replace(/gh(?=[ei])/g,'g').replace(/c(?=[ei])/g,'ч').replace(/g(?=[ei])/g,'ж').replace(/c/g,'k');
+  else x = x.replace(/ph/g,'f').replace(/ck/g,'k').replace(/qu/g,'kw').replace(/q/g,'k').replace(/x/g,'ks').replace(/^wh/,'w').replace(/^wr/,'r')
+            .replace(/^kn/,'n').replace(/gh/g,'').replace(/th/g,'t').replace(/c(?=[eiy])/g,'s').replace(/c/g,'k').replace(/z/g,'s').replace(/(?!^)y/g,'i');
+  return x.replace(/[aeiouy]+/g,'a').replace(/(.)\1+/g,'$1');
+}
+function lev(a,b){ const d=[...Array(b.length+1).keys()]; for(let i=1;i<=a.length;i++){ let p=d[0]; d[0]=i;
+  for(let j=1;j<=b.length;j++){ const t=d[j]; d[j]=Math.min(d[j]+1, d[j-1]+1, p+(a[i-1]===b[j-1]?0:1)); p=t } } return d[b.length] }
+const sim = (a,b) => !a||!b ? 0 : 1 - lev(a,b)/Math.max(a.length,b.length);
+// English words a recognizer often writes as a same-sounding word
+const HOMO = {two:'to too tu', four:'for fore', eight:'ate', one:'won', sea:'see c', bee:'be b', tea:'tee t', eye:'i aye', pear:'pair pare',
+  knight:'night', flower:'flour', son:'sun', sun:'son', week:'weak', meat:'meet', right:'write', ate:'eight', hare:'hair', hair:'hare', deer:'dear', bear:'bare',
+  rose:'rows', sail:'sale', tail:'tale', mail:'male', plane:'plain', road:'rode', whale:'wail', bean:'been', berry:'bury', cereal:'serial', toe:'tow'};
+function score(h, w){
+  const x = fold(h), t = fold(tw(w)); if(!x || !t) return 0;
+  if(x===t || (' '+x+' ').includes(' '+t+' ')) return 1;
+  if(S.lang!=='ro' && HOMO[t] && HOMO[t].split(' ').includes(x)) return 1;
+  return Math.max(sim(x,t), sim(phon(h), phon(tw(w))));
+}
+// accepted if close enough to the word, or if the word is clearly the closest one among the words being learned
+function matches(heard, w, cands){
+  const need = fold(tw(w)).length<=4 ? 0.75 : 0.7;
+  if(heard.some(h=>score(h,w) >= need)) return true;
+  if(!cands || cands.length<2) return false;
+  let best=null, bs=0;
+  for(const h of heard) for(const c of cands){ const sc = score(h,c); if(sc>bs){ bs=sc; best=c } }
+  return !!best && best.en===w.en && bs>=0.5;
+}
+// ---------- pronunciation practice in "Учить" ----------
+// S.pron: 'off' | 'record' (record yourself & compare, no recognition) | 'whisper' (on-device model) | 'asr' (browser recognizer)
+const PRON = {
+  off:    {name:'Выключено'},
+  record: {name:'🎙️ Запиши и сравни', btn:'🎙️ Запиши себя', hint:'Без распознавания: ребёнок записывает слово и слушает себя после правильного произношения. Родитель может нажать 👍 или 🔁.'},
+  whisper:{name:'🤖 Модель Whisper', btn:'🤖 Скажи сам', hint:'Нейросеть распознаёт речь прямо на устройстве (английский и румынский). Один раз нужно скачать модель, дальше работает быстрее.'},
+  asr:    {name:'🌐 Распознавание браузера', btn:'🎤 Скажи сам', hint:'Встроенное распознавание браузера (Chrome, Safari) или диктовка Claude на опубликованной странице. Бывает неточным.'}
+};
+const canRecord = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) && !IN_FRAME;
+const pronAvailable = () => S.pron==='asr' ? canListen() : (S.pron==='record'||S.pron==='whisper') ? canRecord() : false;
+function pronWhyNot(){
+  if(S.pron==='asr') return '🎤 Распознавание речи недоступно в этом браузере (⚙️ Настройки → Микрофон)';
+  if(IN_FRAME) return '🎙️ Запись голоса работает только в файл-версии (english-cards.html) — на опубликованной странице браузер не даёт доступ к микрофону';
+  return '🎙️ Этот браузер не умеет записывать звук — попробуйте Chrome или Safari';
+}
+function renderPron(){
+  const box = document.getElementById('pronModes'); if(!box) return;
+  box.innerHTML = Object.entries(PRON).map(([k,v])=>`<span class="chip ${S.pron===k?'on':''}" onclick="S.pron='${k}';save();renderPron();updateMicUI()">${v.name}</span>`).join('')
+    + (PRON[S.pron].hint ? `<p class="muted" style="flex-basis:100%;margin:6px 0 0;font-size:14px">${PRON[S.pron].hint}${pronAvailable()?'':'<br>⚠️ '+pronWhyNot()}</p>` : '');
+  document.getElementById('whBox').classList.toggle('hide', S.pron!=='whisper');
+  document.getElementById('whModel').value = S.whModel;
+  document.getElementById('whStatus').textContent = WH ? '✅ Модель загружена и готова' : whLoading ? 'Загружается…' : 'Модель ещё не загружена. Можно загрузить заранее (нужен интернет), иначе она скачается при первом нажатии «Скажи сам».';
+}
+
+// record from the microphone; stops by itself after the learner goes quiet (or after 5 s)
+let REC = null;
+async function recordOnce(onLevel){
+  const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true, noiseSuppression:true}});
+  const mr = new MediaRecorder(stream), chunks = [];
+  const ac = new (window.AudioContext||window.webkitAudioContext)(), an = ac.createAnalyser();
+  an.fftSize = 1024; ac.createMediaStreamSource(stream).connect(an);
+  const buf = new Float32Array(an.fftSize); let heard = false, quiet = 0; const t0 = performance.now();
+  return new Promise(res=>{
+    mr.ondataavailable = e => { if(e.data.size) chunks.push(e.data) };
+    mr.onstop = () => { stream.getTracks().forEach(t=>t.stop()); ac.close().catch(()=>{}); REC=null; res(new Blob(chunks, {type: mr.mimeType || 'audio/webm'})) };
+    mr.start(); REC = { stop: () => { if(mr.state==='recording') mr.stop() } };
+    const iv = setInterval(()=>{
+      if(mr.state!=='recording') return clearInterval(iv);
+      an.getFloatTimeDomainData(buf); let e=0; for(const v of buf) e+=v*v; const rms = Math.sqrt(e/buf.length);
+      onLevel && onLevel(rms); const now = performance.now();
+      if(rms > 0.02){ heard = true; quiet = 0 } else if(heard){ quiet = quiet || now; if(now-quiet > 800){ clearInterval(iv); mr.stop() } }
+      if(now - t0 > 5000){ clearInterval(iv); mr.stop() }
+    }, 60);
+  });
+}
+const recErr = e => /NotAllowed|Security/.test(e && e.name) ? 'Нет доступа к микрофону — разреши его в браузере' : /NotFound/.test(e && e.name) ? 'Микрофон не найден' : 'Не удалось включить микрофон';
+
+// speak the right word, then call back (used to play "right → mine")
+function speakThen(text, cb){
+  if(useRec()){ let done=false; const go=()=>{ if(!done){ done=true; cb() } }; if(playRec(text, null, go)){ setTimeout(go, 3000); return } }
+  const r = reader();
+  if(r.kind==='device' && HAS_SS){ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.voice=r.v; u.lang=r.v.lang; u.rate=S.rate;
+    let done=false; const go=()=>{ if(!done){ done=true; cb() } }; u.onend = go; setTimeout(go, 2500); speechSynthesis.speak(u); }
+  else { speak(text); setTimeout(cb, 1300) }
+}
+let lastRecURL = null;
+function playMine(){ if(lastRecURL){ const a = new Audio(lastRecURL); a.play().catch(()=>{}) } }
+function pronExtra(html){ const x = document.getElementById('lPronExtra'); x.innerHTML = html; x.classList.toggle('hide', !html) }
+
+async function pronClick(){
+  if(REC){ REC.stop(); return }                        // second tap = stop recording
+  if(S.pron==='asr') return sayLearn();
+  const w = L.list[L.i], btn = document.getElementById('lMic'), res = document.getElementById('lSayRes');
+  pronExtra(''); res.className='sayres'; res.textContent='Говори…';
+  btn.classList.add('listening'); btn.textContent='⏺ Запись… (нажми, чтобы остановить)';
+  let blob;
+  try{ blob = await recordOnce() }catch(e){ btn.classList.remove('listening'); btn.textContent=PRON[S.pron].btn; res.className='sayres bad'; res.textContent=recErr(e); return }
+  btn.classList.remove('listening'); btn.textContent = PRON[S.pron].btn;
+  if(lastRecURL) URL.revokeObjectURL(lastRecURL);
+  lastRecURL = URL.createObjectURL(blob);
+  const compare = `<button onclick="speak(tw(L.list[L.i]))">🔊 Правильно</button><button onclick="playMine()">▶️ Как я сказал</button>`;
+  if(S.pron==='record'){
+    res.textContent = 'Слушай: сначала правильно, потом ты';
+    pronExtra(compare + `<button class="pri" onclick="pronSelf(true)">👍 Похоже</button><button onclick="pronSelf(false)">🔁 Ещё раз</button>`);
+    speakThen(tw(w), ()=>setTimeout(playMine, 250));
+    return;
+  }
+  // whisper
+  try{
+    if(!WH) res.textContent = '⬇️ Загружаю модель распознавания (один раз)…';
+    await loadWhisper(p=>{ if(p && p.status==='progress' && p.total) res.textContent = `⬇️ Загружаю модель: ${Math.round(p.loaded/1048576)} из ${Math.round(p.total/1048576)} МБ (${p.file||''})` });
+    res.textContent = '🤖 Распознаю…';
+    const text = await whisperText(blob);
+    const heard = text ? [text] : [];
+    const ok = matches(heard, w, L.list);
+    res.className = 'sayres '+(ok?'ok':'bad');
+    res.textContent = ok ? `✅ Отлично! «${text}»` : text ? `❌ Похоже на «${text}». Послушай и попробуй ещё` : '🤔 Ничего не услышал. Попробуй ещё раз';
+    sfx(ok); pronExtra(compare);
+    if(!ok && text) setTimeout(()=>speak(tw(w)), 600);
+  }catch(e){ res.className='sayres bad'; res.textContent = '⚠️ Модель не загрузилась: нужен интернет для первой загрузки. ' + (e && e.message ? '('+e.message.slice(0,80)+')' : ''); pronExtra(compare) }
+}
+function pronSelf(ok){
+  const res = document.getElementById('lSayRes');
+  sfx(ok); res.className = 'sayres '+(ok?'ok':'bad');
+  res.textContent = ok ? '👍 Молодец!' : '🔁 Послушай ещё раз и запиши снова';
+  if(!ok) setTimeout(()=>speak(tw(L.list[L.i])), 500);
+}
+
+// ---- Whisper (transformers.js), runs in the browser; model is downloaded once and cached by the browser ----
+let WH = null, whLoading = null;
+const TJS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.5';
+function loadWhisper(onProg){
+  if(WH) return Promise.resolve(WH);
+  if(whLoading) return whLoading;
+  whLoading = (async()=>{
+    const T = await import(TJS_URL);
+    T.env.allowLocalModels = false;
+    WH = await T.pipeline('automatic-speech-recognition', S.whModel, {dtype:'q8', device:'wasm', progress_callback:onProg});
+    return WH;
+  })();
+  whLoading.catch(()=>{}).finally(()=>{ whLoading = null; renderPron() });
+  return whLoading;
+}
+async function loadWhisperUI(){
+  const st = document.getElementById('whStatus');
+  try{ await loadWhisper(p=>{ if(p && p.status==='progress' && p.total) st.textContent = `⬇️ ${p.file||''}: ${Math.round(p.loaded/1048576)} из ${Math.round(p.total/1048576)} МБ` }); renderPron(); toast('Модель готова') }
+  catch(e){ st.textContent = '⚠️ Не удалось загрузить модель: ' + (e && e.message || e) }
+}
+// decode the recording and convert to 16 kHz mono, as Whisper expects
+async function blobTo16k(blob){
+  const ac = new (window.AudioContext||window.webkitAudioContext)();
+  const buf = await ac.decodeAudioData(await blob.arrayBuffer()); ac.close().catch(()=>{});
+  const off = new OfflineAudioContext(1, Math.max(1, Math.ceil(buf.duration*16000)), 16000);
+  const src = off.createBufferSource(); src.buffer = buf; src.connect(off.destination); src.start();
+  return (await off.startRendering()).getChannelData(0);
+}
+async function whisperText(blob){
+  const audio = await blobTo16k(blob);
+  let e=0; for(const v of audio) e+=v*v; if(Math.sqrt(e/audio.length) < 0.003) return '';   // silence: Whisper would invent words
+  const out = await WH(audio, {language: S.lang==='ro' ? 'romanian' : 'english', task:'transcribe'});
+  return (out && out.text || '').trim().replace(/^[\s.,!?"«»-]+|[\s.,!?"«»-]+$/g,'');
+}
+
+async function sayLearn(){
+  const w = L.list[L.i], btn = document.getElementById('lMic'), res = document.getElementById('lSayRes');
+  btn.classList.add('listening'); btn.textContent='🎤 Говори…'; res.className='sayres'; res.textContent='';
+  try{
+    const heard = await listen();
+    const ok = matches(heard, w, L.list);
+    res.className = 'sayres '+(ok?'ok':'bad');
+    res.textContent = ok ? `✅ Отлично! «${heard[0]}»` : heard.length ? `❌ Похоже на «${heard[0]}». Послушай и попробуй ещё` : '🤔 Ничего не услышал. Попробуй ещё раз';
+    sfx(ok);
+    if(!ok && heard.length) setTimeout(()=>speak(tw(w)), 600);
+  }catch(e){ res.className='sayres bad'; res.textContent = micErr(e); }
+  btn.classList.remove('listening'); btn.textContent='🎤 Скажи сам';
+}
+
+// ---------- sound effects (generated, no files) ----------
+let AC = null;
+function tone(freq, start, dur, type='sine', vol=0.25){
+  const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + start;
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+0.02); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  o.connect(g).connect(AC.destination); o.start(t); o.stop(t+dur+0.05);
+}
+function sfx(kind){
+  if(!S.sounds) return;
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==='suspended') AC.resume();
+    if(kind===true){ tone(784,0,0.15,'triangle'); tone(1175,0.11,0.3,'triangle') }            // correct: bright "ding-ding"
+    else if(kind===false){ tone(196,0,0.22,'square',0.12); tone(147,0.2,0.35,'square',0.12) }  // wrong: low "buzz"
+    else if(kind==='pass'){ [523,659,784,1047].forEach((f,i)=>tone(f,i*0.13,0.3,'triangle')) } // fanfare
+    else if(kind==='fail'){ [392,349,311,262].forEach((f,i)=>tone(f,i*0.2,0.3,'sine',0.2)) }  // sad descending
+  }catch(e){}
+}
+
+// ---------- navigation ----------
+const SECTIONS = ['profiles','history','home','learn','testSetup','test','result','add','settings'];
+function go(id){
+  if(!PROF && id!=='profiles') id='profiles';
+  SECTIONS.forEach(s=>document.getElementById(s).classList.toggle('hide', s!==id));
+  if(id==='profiles') renderProfiles();
+  if(id==='history') renderHistory();
+  if(id==='home') renderHome();
+  if(id==='testSetup') renderTestSetup();
+  if(id==='add') renderMine();
+  if(id==='settings') renderSettings();
+  window.scrollTo(0,0);
+}
+
+// ---------- home ----------
+const EMO = {'Животные':'🐾','Фрукты и овощи':'🍎','Еда и напитки':'🍕','Цвета':'🎨','Числа':'🔢','Семья и люди':'👨‍👩‍👧','Тело':'🖐️','Одежда':'👕','Школа':'🎒','Дом':'🏠','Игрушки и игры':'🧸','Транспорт':'🚗','Природа и погода':'🌦️','Действия':'🏃','Профессии':'👩‍⚕️','Спорт':'⚽','Время года и праздники':'🎄','Город':'🏙️','Путешествия':'🧳','Наука и техника':'🔬','Здоровье':'💊','Музыка и искусство':'🎻','Инструменты':'🔧','Общество и государство':'🏛️','История и культура':'🏺','Знаки и символы':'⚠️','Офис и работа':'💼','Предлоги':'📍','Мои слова':'⭐'};
+function renderHome(){
+  document.getElementById('langs').innerHTML = `<span class="muted" style="align-self:center">Язык:</span>` + Object.entries(LANGS).map(([k,l])=>`<span class="chip ${S.lang===k?'on':''}" onclick="setLang('${k}')">${l.flag} ${l.name}</span>`).join('');
+  const last = PROF.hist[PROF.hist.length-1];
+  document.getElementById('hello').innerHTML = `<div style="font-size:19px">${PROF.av} Привет, <b>${esc(PROF.name)}</b>! <span class="muted">${PROF.grade} класс</span></div>
+    <div class="muted">${last?`Последний тест: ${last.ok}/${last.total} (${last.pct}%) ${last.pass?'✅':'❌'} ${catIcons(last.cats)}`:'Тестов ещё не было'}</div>`;
+  const cats = categories();
+  const all = allWords();
+  // only topics that have words for the selected grade; count only in the selected grades
+  const shown = cats.map(c=>[c, all.filter(w=>w.cat===c && lvlOk(w) && hasLang(w)).length]).filter(([,n])=>n>0);
+  document.getElementById('cats').innerHTML = shown.map(([c,n])=>{
+    const on = !S.cats || S.cats.includes(c);
+    return `<span class="chip ${on?'on':''}" onclick="toggleCat('${esc(c)}')">${EMO[c]||'📁'} ${esc(c)} <b>${n}</b></span>`;
+  }).join('');
+  const onC = shown.filter(([c])=>!S.cats || S.cats.includes(c));
+  const nW = all.filter(w=>lvlOk(w) && hasLang(w) && catOk(w)).length;
+  document.getElementById('catSum').innerHTML = onC.length===shown.length ? `все ${shown.length} · <b>${nW}</b> слов`
+    : onC.length ? onC.map(([c])=>`<span title="${esc(c)}">${EMO[c]||'📁'}</span>`).join(' ') : '<span style="color:var(--bad)">не выбраны</span>';
+  document.getElementById('catBox').classList.toggle('hide', !S.catsOpen);
+  document.getElementById('catBtn').textContent = S.catsOpen ? '▲ Свернуть' : '✏️ Выбрать';
+  document.getElementById('lvls').innerHTML = lvlChips('toggleLvl', true);
+  document.getElementById('countInfo').textContent = `Слов для занятий: ${pool().length}`;
+}
+function toggleCat(c){
+  let cs = S.cats || categories();
+  cs = cs.includes(c) ? cs.filter(x=>x!==c) : [...cs, c];
+  S.cats = cs.length===categories().length ? null : cs; save(); renderHome();
+}
+function setAllCats(on){S.cats = on?null:[];save();renderHome()}
+function toggleLvl(l){ pickLvl(l); save(); renderHome(); }
+
+// ---------- learn ----------
+let L = {list:[], i:0};
+function hardWords(){
+  return allWords().filter(w=>{const s=STATS[sk(w)];return hasLang(w) && s && s.bad>0 && s.bad>=s.ok*0.5})
+                   .sort((a,b)=>(STATS[sk(b)].bad-STATS[sk(b)].ok)-(STATS[sk(a)].bad-STATS[sk(a)].ok));
+}
+function startLearn(hard){
+  const list = hard ? hardWords() : pool();
+  if(!list.length){toast(hard?'Трудных слов пока нет — молодец! 🎉 (они появятся после проверки)':'Выбери хотя бы одну тему и класс');return}
+  L = {list, i:0, hard:!!hard}; go('learn'); lShow();
+}
+function shuffleLearn(){L.list=shuffle(L.list);L.i=0;lShow()}
+function lShow(){
+  const w = L.list[L.i];
+  document.getElementById('lCat').textContent = (EMO[w.cat]||'')+' '+w.cat;
+  document.getElementById('lPic').outerHTML = picHTML(w).replace('class="pic','id="lPic" class="pic');
+  document.getElementById('lEn').textContent = tw(w);
+  const sr = document.getElementById('lSayRes'); if(sr){ sr.textContent=''; sr.className='sayres' }
+  if(document.getElementById('lPronExtra')) pronExtra('');
+  document.getElementById('lTr').innerHTML = trHTML(w);
+  const ru = document.getElementById('lRu'); ru.textContent = w.ru;
+  ru.classList.toggle('hidden', document.getElementById('hideRu').checked);
+  document.getElementById('lNum').textContent = `${L.i+1} / ${L.list.length}`;
+  document.getElementById('lProg').style.width = ((L.i+1)/L.list.length*100)+'%';
+  const c = document.getElementById('lCard'); c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop');
+  if(S.autoSay) setTimeout(()=>speak(tw(w)),150);
+}
+function lMove(d){L.i=(L.i+d+L.list.length)%L.list.length;lShow()}
+function speakCur(rate){const w=L.list[L.i]; if(w) speak(tw(w), rate)}
+function sayId(en){const w=allWords().find(x=>x.en===en); if(w) speak(tw(w))}
+// swipe + keys
+let tx=null;
+document.addEventListener('touchstart',e=>{if(!isOpen('learn'))return;tx=e.touches[0].clientX},{passive:true});
+document.addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;tx=null;if(Math.abs(dx)>60)lMove(dx<0?1:-1)});
+document.addEventListener('keydown',e=>{
+  if(isOpen('learn')){if(e.key==='ArrowRight')lMove(1);if(e.key==='ArrowLeft')lMove(-1);if(e.key===' '){e.preventDefault();speakCur()}}
+  if(isOpen('test') && /^[1-4]$/.test(e.key)){const b=document.querySelectorAll('#tOpts .opt')[e.key-1]; if(b&&!b.disabled)b.click()}
+});
+const isOpen = id => !document.getElementById(id).classList.contains('hide');
+
+// ---------- test ----------
+const LENS = [15,30,50,100];
+const QT = {
+  pic2en:'🖼️ Картинка → слово',
+  en2pic:'🔤 Слово → картинка',
+  say2pic:'👂 Слушаю → картинка',
+  ru2en:'🇷🇺 Перевод → слово'
+};
+// test words come from the learn screen if we got here from it, otherwise from the home filters
+let lastSection='home';
+const isFromLearnFn = () => lastSection==='learn' && L.list.length>0;
+let isFromLearn = false;
+function testSource(){ return isFromLearn ? L.list : pool() }
+function lvlChips(fn, compact){
+  if(compact){
+    const all = allWords(), lv = [...new Set(all.map(w=>+w.lvl))].sort((a,b)=>a-b), cur = lvlMax(), my = PROF ? PROF.grade : 0;
+    const inCats = all.filter(w=>catOk(w) && hasLang(w));   // words in the selected topics, grade includes lower grades
+    return `<div class="grades">${lv.map(l=>`<span class="chip ${l===cur?'on':l<cur?'part':''}" title="${l} класс" onclick="${fn}(${l})"><b>${l}</b> — ${inCats.filter(w=>+w.lvl<=l).length}</span>`).join('')}</div>`
+      + `<div class="muted" style="margin-top:6px;font-size:14px">Выбран <b>${cur} класс</b> — ${lvlText()}${my&&cur!==my?` · <a href="#" onclick="${fn}(${my});return false">↩ класс ученика (${my})</a>`:my?' 🎒':''}</div>`;
+  }
+  const all = allWords(), lv = [...new Set(all.map(w=>+w.lvl))].sort((a,b)=>a-b);
+  // counts include all lower grades and only the selected topics
+  const inCats = all.filter(w=>catOk(w) && hasLang(w)), cur = lvlMax(), my = PROF ? PROF.grade : 0;
+  return lv.map(l=>`<span class="chip ${l===cur?'on':l<cur?'part':''}" onclick="${fn}(${l})">${l===my?'🎒 ':''}${l} класс <b>${inCats.filter(w=>+w.lvl<=l).length}</b></span>`).join('')
+    + (compact ? (my&&cur!==my?`<a href="#" style="align-self:center;font-size:14px" onclick="${fn}(${my});return false">↩ класс ученика (${my})</a>`:'')
+       : `<p class="muted" style="margin:8px 0 0">Выбран <b>${cur} класс</b> — ${lvlText()}${my&&cur!==my?` · <a href="#" onclick="${fn}(${my});return false">вернуть класс ученика (${my})</a>`:''}</p>`);
+}
+function pickLvl(l){ S.lvls = [l] }
+function tToggleLvl(l){
+  // changing the grade here means: test from the selected grades, not from the learn screen
+  pickLvl(l); lastSection='home'; save(); renderTestSetup();
+}
+const selQT = () => (S.qtypes && S.qtypes.length) ? S.qtypes.filter(k=>QT[k]) : Object.keys(QT);
+function toggleQT(k){
+  let q = selQT();
+  q = q.includes(k) ? q.filter(x=>x!==k) : [...q, k];
+  if(!q.length){ toast('Нужен хотя бы один вид вопросов'); return }
+  S.qtypes = q.length===Object.keys(QT).length ? null : q; save(); renderTestSetup();
+}
+function renderTestSetup(){
+  isFromLearn = isFromLearnFn();
+  const n = testSource().length;
+  document.getElementById('tLvls').innerHTML = lvlChips('tToggleLvl');
+  document.getElementById('lens').innerHTML = LENS.map(l=>`<span class="chip ${S.len===l?'on':''}" onclick="S.len=${l};save();renderTestSetup()">${l} ${l===15?'⚡ быстро':l===100?'🐢 долго':''}</span>`).join('')
+    + `<span class="chip ${S.len===0?'on':''}" onclick="S.len=0;save();renderTestSetup()">все (${n})</span>`;
+  // several question types can be ticked; a test mixes the ticked ones (null = all)
+  const qt = selQT();
+  document.getElementById('qtypes').innerHTML = Object.entries(QT).map(([k,v])=>`<span class="chip ${qt.includes(k)?'on':''}" onclick="toggleQT('${k}')">${v}</span>`).join('')
+    + `<span class="chip ${S.qtypes?'':'on'}" onclick="S.qtypes=null;save();renderTestSetup()">🎲 Все виды</span>`;
+  const len = S.len ? Math.min(S.len,n) : n;
+  document.getElementById('tInfo').textContent = n<4 ? 'Нужно хотя бы 4 слова — выбери больше тем.' :
+    `Будет ${len} вопросов из ${n} выбранных слов${isFromLearn?(L.hard?' (трудные слова)':' (из режима «Учить»)'):''}.` + (S.len>n?' Слов меньше, чем выбрано — некоторые повторятся.':'')
+    + (n<4 ? '' : ` 🎯 Чтобы сдать, нужно не меньше ${S.passPct}% — это ${Math.ceil(len*S.passPct/100)} правильных из ${len}.`);
+}
+const _go = go;
+go = function(id){ const cur = SECTIONS.find(isOpen); if(id==='testSetup' && cur!=='result' && cur!=='testSetup') lastSection = cur; _go(id) };
+
+let T = null;
+function startTest(){
+  const src = testSource();
+  if(src.length<4){toast('Нужно минимум 4 слова');return}
+  const len = S.len || src.length;
+  // prefer weaker words first: sort by stats then shuffle groups
+  let qs = [];
+  while(qs.length<len) qs.push(...shuffle(src));
+  qs = qs.slice(0,len);
+  T = {qs, i:0, ok:0, mistakes:[], src};
+  go('test'); tShow();
+}
+// wrong options come only from the words being tested (same topic first);
+// the rest of the dictionary is used only if the tested set is too small
+function distractors(w){
+  const src = T.src, all = allWords();
+  const ok = x => hasLang(x) && x.en!==w.en && x.img!==w.img && x.ru!==w.ru && tw(x).toLowerCase()!==tw(w).toLowerCase();
+  const tiers = [
+    src.filter(x=>ok(x) && x.cat===w.cat), src.filter(x=>ok(x) && x.cat!==w.cat),
+    all.filter(x=>ok(x) && x.cat===w.cat), all.filter(ok)
+  ].map(shuffle);
+  const res=[]; for(const x of tiers.flat()){ if(res.length===3)break; if(!res.some(r=>r.en===x.en||r.img===x.img)) res.push(x) }
+  return res;
+}
+function tShow(){
+  const w = T.qs[T.i];
+  const qt = selQT(); let type = qt[Math.random()*qt.length|0];
+  T.type = type;
+  const opts = shuffle([w, ...distractors(w)]);
+  T.opts = opts;
+  document.getElementById('tNum').textContent = `Вопрос ${T.i+1} из ${T.qs.length}`;
+  document.getElementById('tScore').textContent = `✅ ${T.ok}  ❌ ${T.mistakes.length}  🎯 нужно ${Math.ceil(T.qs.length*S.passPct/100)}`;
+  document.getElementById('tProg').style.width = (T.i/T.qs.length*100)+'%';
+  const q = document.getElementById('tQ');
+  if(type==='pic2en') q.innerHTML = `<div class="muted">Что это ${LG().adv}?</div>${picHTML(w)}`;
+  if(type==='en2pic') q.innerHTML = `<div class="muted">Найди картинку</div><div class="en">${esc(tw(w))}</div><button class="say" onclick="speak(tw(T.qs[T.i]))">🔊</button>`;
+  if(type==='say2pic') q.innerHTML = `<div class="muted">Послушай и найди картинку</div><button class="say" style="width:110px;height:110px;font-size:52px" onclick="speak(tw(T.qs[T.i]))">🔊</button><div><button onclick="speak(tw(T.qs[T.i]),0.55)">🐢 медленно</button></div>`;
+  if(type==='ru2en') q.innerHTML = `<div class="muted">Как сказать ${LG().adv}?</div><div class="en" style="color:var(--pri)">${esc(w.ru)}</div>`;
+  if(type==='say'){
+    T.tries = 0;
+    q.innerHTML = `<div class="muted">Скажи ${LG().adv}</div>${picHTML(w)}<div class="ru" style="font-size:26px">${esc(w.ru)}</div>
+      <button class="pri mic-big" id="tMic" onclick="sayTest()">🎤</button><div id="tSayRes" class="sayres muted">Нажми 🎤 и скажи слово</div>
+      <button onclick="sayGiveUp()" style="margin-top:8px">🤷 Не знаю</button>`;
+    document.getElementById('tOpts').innerHTML = '';
+    return;
+  }
+  const picOpts = type==='en2pic'||type==='say2pic';
+  document.getElementById('tOpts').innerHTML = opts.map((o,k)=>
+    `<button class="opt" onclick="answer(${k},this)">${picOpts?picHTML(o):esc(tw(o))}</button>`).join('');
+  if(type==='say2pic'||(type==='en2pic'&&S.autoSay)) setTimeout(()=>speak(tw(w)),250);
+}
+async function sayTest(){
+  const w = T.qs[T.i], btn = document.getElementById('tMic'), res = document.getElementById('tSayRes');
+  if(!btn || btn.disabled) return;
+  btn.classList.add('listening'); res.className='sayres'; res.textContent='Говори…';
+  let heard = [];
+  try{ heard = await listen() }catch(e){ btn.classList.remove('listening'); res.className='sayres bad'; res.textContent = micErr(e); return }
+  btn.classList.remove('listening');
+  if(matches(heard, w, T.src)) return finishSay(true, heard[0]);
+  T.tries++;
+  if(!heard.length){ res.className='sayres bad'; res.textContent='🤔 Ничего не услышал — нажми 🎤 ещё раз'; return }
+  if(T.tries < 2){ res.className='sayres bad'; res.textContent=`Похоже на «${heard[0]}». Попробуй ещё раз!`; sfx(false); return }
+  finishSay(false, heard[0]);
+}
+function sayGiveUp(){ finishSay(false, '') }
+function finishSay(right, heard){
+  const w = T.qs[T.i], q = document.getElementById('tQ');
+  q.querySelectorAll('button').forEach(b=>b.disabled=true);
+  const st = STATS[sk(w)] || (STATS[sk(w)]={ok:0,bad:0});
+  if(right){ T.ok++; st.ok++ } else { st.bad++; T.mistakes.push(w) }
+  const res = document.getElementById('tSayRes');
+  res.className = 'sayres '+(right?'ok':'bad');
+  res.textContent = right ? `✅ Правильно! «${heard}»` : (heard ? `❌ Ты сказал «${heard}»` : '❌');
+  q.insertAdjacentHTML('beforeend',`<div style="font-size:30px;font-weight:900;margin-top:6px">${esc(tw(w))}</div><div class="tr">${trHTML(w)}</div>`);
+  sfx(right); setTimeout(()=>speak(tw(w)), S.sounds?500:0); save();
+  setTimeout(()=>{ T.i++; if(T.i>=T.qs.length) endTest(); else tShow(); }, right?1800:3000);
+}
+function answer(k, btn){
+  const w = T.qs[T.i], o = T.opts[k];
+  const btns = [...document.querySelectorAll('#tOpts .opt')];
+  btns.forEach(b=>b.disabled=true);
+  const right = o.en===w.en;
+  const st = STATS[sk(w)] || (STATS[sk(w)]={ok:0,bad:0});
+  const picOpts = T.type==='en2pic'||T.type==='say2pic';
+  if(right){ T.ok++; st.ok++; btn.classList.add('ok','pop'); }
+  else{
+    st.bad++; T.mistakes.push(w); btn.classList.add('bad','shake');
+    btns[T.opts.findIndex(x=>x.en===w.en)].classList.add('ok');
+    if(picOpts) btn.insertAdjacentHTML('beforeend',`<div style="font-size:16px">${esc(tw(o))}</div>`);
+  }
+  // show the word under the correct picture
+  if(picOpts){const cb=btns[T.opts.findIndex(x=>x.en===w.en)]; cb.insertAdjacentHTML('beforeend',`<div style="font-size:18px">${esc(tw(w))}</div>`)}
+  else document.getElementById('tQ').insertAdjacentHTML('beforeend',`<div class="ru">${esc(w.ru)}</div>`);
+  document.getElementById('tQ').insertAdjacentHTML('beforeend',`<div style="font-size:22px;font-weight:800;margin-top:6px">${esc(tw(w))}</div><div class="tr">${trHTML(w)}</div>`);
+  sfx(right);
+  if(S.sounds) setTimeout(()=>speak(tw(w)), right?450:650); else speak(tw(w));
+  save();
+  setTimeout(()=>{ T.i++; if(T.i>=T.qs.length) endTest(); else tShow(); }, right?1500:2600);
+}
+function endTest(){
+  if(!T) return go('home');
+  const done = T.ok + T.mistakes.length, total = T.qs.length;
+  // score is always counted against the whole test, even if it was stopped early
+  const pct = total ? Math.round(T.ok/total*100) : 0;
+  const pass = pct >= S.passPct;
+  const need = Math.ceil(total * S.passPct / 100), lack = Math.max(0, need - T.ok);
+  const stars = !pass?'📖':pct>=95?'⭐⭐⭐':pct>=90?'⭐⭐':'⭐';
+  const msg = pass ? (pct===100?'Тест пройден! Без единой ошибки!':'Тест пройден! Молодец!')
+                   : `Тест не пройден — нужно ${S.passPct}% правильных. Повтори слова и попробуй ещё раз!`;
+  const uniqMist = [...new Map(T.mistakes.map(w=>[w.en,w])).values()];
+  document.getElementById('rBox').innerHTML = `
+    <div class="stars">${stars}</div><h2 style="color:${pass?'var(--ok)':'var(--bad)'}">${msg}</h2>
+    <p style="font-size:22px">Правильно: <b>${T.ok}</b> из <b>${total}</b> (${pct}%)</p>
+    <div class="passbar"><div class="fill ${pass?'ok':'bad'}" style="width:${pct}%"></div><div class="mark" style="left:${S.passPct}%"><span>нужно ${S.passPct}%</span></div></div>
+    <p style="font-size:17px">🎯 Чтобы сдать, нужно <b>не меньше ${S.passPct}%</b> — это <b>${need} из ${total}</b> правильных.
+      ${pass ? `<span style="color:var(--ok)"><b>Сдано!</b>${T.ok>need?` (на ${T.ok-need} больше, чем нужно)`:''}</span>`
+             : `<span style="color:var(--bad)"><b>Не хватило ${lack} ${lack===1?'правильного ответа':'правильных ответов'}.</b></span>`}</p>
+    ${done<total?`<p class="muted">Проверка остановлена: отвечено на ${done} из ${total} вопросов</p>`:''}
+    ${uniqMist.length?`<p class="muted">Ошибки — повтори эти слова:</p><div class="mist">${uniqMist.map(w=>`<span onclick="sayId('${esc(w.en).replace(/&#39;/g,"\\'")}')">${esc(miniImg(w))} <b>${esc(tw(w))}</b> ${(S.lang==='ro'?w.roRu:w.trRu)?'«'+esc(S.lang==='ro'?w.roRu:w.trRu)+'»':''} — ${esc(w.ru)}</span>`).join('')}</div>`:''}
+    <div class="row" style="justify-content:center;margin-top:18px">
+      ${!pass?`<button class="pri big" onclick="relearn()">📖 Повторить обучение</button>`:''}
+      ${uniqMist.length?`<button class="${pass?'pri':''}" onclick="learnMistakes()">😓 Учить только ошибки</button>`:''}
+      <button onclick="go('testSetup')">🔁 Пройти тест ещё раз</button>
+      <button onclick="go('home')">🏠 Домой</button>
+    </div>`;
+  T.lastMist = uniqMist;
+  T.passed = pass; T.need = need;
+  if(done>0) PROF.hist.push({d:Date.now(), total, ok:T.ok, pct, pass, lv:[...new Set(T.src.map(w=>+w.lvl))].sort((a,b)=>a-b),
+    cats:[...new Set(T.src.map(w=>w.cat))], mist:uniqMist.map(w=>w.en), stopped:done<total, lang:S.lang, passPct:S.passPct});
+  if(PROF.hist.length>300) PROF.hist.splice(0, PROF.hist.length-300);
+  save();
+  if(pass) confetti();
+  go('result');
+  setTimeout(()=>sfx(pass?'pass':'fail'), 200);
+}
+// relearn all words of the failed test (mistakes first), then the test can be retaken from the learn screen
+function relearn(){
+  const uniq = [...new Map(T.src.map(w=>[w.en,w])).values()];
+  const mist = new Set(T.lastMist.map(w=>w.en));
+  L = {list:[...uniq.filter(w=>mist.has(w.en)), ...uniq.filter(w=>!mist.has(w.en))], i:0, hard:false};
+  lastSection='learn'; _go('learn'); lShow();
+}
+function learnMistakes(){L={list:T.lastMist,i:0,hard:true};_go('learn');lShow()}
+function confetti(){
+  for(let i=0;i<40;i++){const s=document.createElement('div');s.textContent=['🎉','⭐','🎈','✨'][i%4];
+    s.style.cssText=`position:fixed;top:-40px;left:${Math.random()*100}vw;font-size:${20+Math.random()*20}px;z-index:99;transition:transform ${2+Math.random()*2}s linear,opacity 3s;pointer-events:none`;
+    document.body.appendChild(s);requestAnimationFrame(()=>{s.style.transform=`translateY(${110}vh) rotate(${Math.random()*720}deg)`;s.style.opacity=0});setTimeout(()=>s.remove(),4500)}
+}
+
+// ---------- my words ----------
+function addWord(){
+  const en=aEn.value.trim(), ru=aRu.value.trim();
+  if(!en||!ru){toast('Заполни слово и перевод');return}
+  MY = MY.filter(w=>w.en.toLowerCase()!==en.toLowerCase());
+  MY.push({en, ru, img:aImg.dataset.pic||aImg.value.trim()||'⭐', tr:aTr.value.trim(), trRu:aTrRu.value.trim(), ro:aRo.value.trim()||undefined, roRu:aRoRu.value.trim()||undefined, cat:aCat.value.trim()||'Мои слова', lvl:+aLvl.value});
+  save(); aEn.value=aRu.value=aImg.value=aTr.value=aTrRu.value=aRo.value=aRoRu.value=''; delete aImg.dataset.pic; picPrev.innerHTML=''; renderMine(); speak(S.lang==='ro' ? (MY[MY.length-1].ro||en) : en);
+}
+function loadPic(inp){
+  const f=inp.files[0]; if(!f) return;
+  const img=new Image(); img.onload=()=>{
+    const k=Math.min(1,240/Math.max(img.width,img.height)), c=document.createElement('canvas');
+    c.width=img.width*k|0; c.height=img.height*k|0; c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    aImg.dataset.pic=c.toDataURL('image/jpeg',0.85); aImg.value='(картинка загружена)';
+    picPrev.innerHTML=`<img src="${aImg.dataset.pic}" style="max-height:100px;border-radius:12px">`;
+  }; img.src=URL.createObjectURL(f);
+}
+function delWord(i){MY.splice(i,1);save();renderMine()}
+function renderMine(){
+  if(window.self!==window.top) document.getElementById('btnExport').classList.add('hide');
+  document.getElementById('catList').innerHTML = categories().map(c=>`<option value="${esc(c)}">`).join('');
+  document.getElementById('myCount').textContent = MY.length;
+  document.getElementById('myTable').innerHTML = MY.map((w,i)=>`<tr><td style="font-size:28px;width:60px">${picHTML(w).replace('class="pic','style="font-size:28px;min-height:0" class="')}</td><td><b>${esc(w.en)}</b>${w.ro?`<br><span class="muted">🇷🇴 ${esc(w.ro)}</span>`:''}</td><td>${esc(w.ru)}</td><td class="muted">${esc(w.cat)}</td><td><button onclick="delWord(${i})">🗑</button></td></tr>`).join('') || '<tr><td class="muted">Пока нет своих слов</td></tr>';
+}
+function exportMine(){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(MY,null,1)],{type:'application/json'}));a.download='my-words.json';a.click();
+}
+function copyMine(){
+  const t=JSON.stringify(MY); mineTxt.value=t;
+  try{navigator.clipboard.writeText(t).then(()=>toast('Скопировано! Вставь на другом устройстве'),()=>{mineTxt.select();toast('Выдели текст в поле и скопируй')})}catch(e){mineTxt.select();toast('Выдели текст в поле и скопируй')}
+}
+function importText(t){
+  try{const arr=JSON.parse(t);arr.forEach(w=>{if(w.en&&w.ru){MY=MY.filter(x=>x.en!==w.en);MY.push(w)}});save();renderMine();toast('Загружено слов: '+arr.length)}catch(e){toast('Не получилось прочитать список')}
+}
+function importMine(inp){ const f=inp.files[0]; if(f) f.text().then(importText) }
+
+// ---------- profiles ----------
+const AVATARS = ['🦊','🐼','🐯','🦄','🐸','🐙','🐵','🦁','🐰','🐻','🐱','🐶','🐧','🦖','🚀','⚽','🌸','⭐'];
+let editId = null, pickAv = AVATARS[0];
+const gradeWord = g => `${g} класс`;
+function renderProfiles(){
+  document.getElementById('profList').innerHTML = DB.list.map(p=>{
+    const last=p.hist[p.hist.length-1];
+    return `<div class="prof ${PROF&&p.id===PROF.id?'cur':''}" onclick="useProfile('${p.id}');go('home')">
+      <button class="ed" onclick="event.stopPropagation();editProfile('${p.id}')">✏️</button>
+      <div class="av">${p.av}</div><div class="nm">${esc(p.name)}</div>
+      <div class="muted">${gradeWord(p.grade)}${p.age?`, ${p.age} лет`:''}</div>
+      <div class="muted">${last?`последний тест ${last.pct}% ${last.pass?'✅':'❌'}`:'тестов пока нет'}</div></div>`}).join('')
+    || '<p class="muted">Пока никого нет — добавь первого ученика ниже 👇</p>';
+  document.getElementById('profHint').textContent = DB.list.length ? 'Нажми на карточку, чтобы выбрать ученика. ✏️ — изменить.' : '';
+  document.getElementById('pfGrade').innerHTML = [1,2,3,4,5,6,7,8,9,10,11,12].map(g=>`<option value="${g}">${g} класс</option>`).join('');
+  editProfile(editId, true);
+}
+function editProfile(id, keep){
+  editId = id; const p = DB.list.find(x=>x.id===id);
+  pfTitle.textContent = p ? `✏️ Изменить: ${p.name}` : '➕ Новый ученик';
+  if(!keep || p){ pfName.value = p?p.name:''; pfAge.value = p?(p.age||''):''; pfGrade.value = p?p.grade:1; pickAv = p?p.av:AVATARS[DB.list.length % AVATARS.length]; }
+  pfCancel.classList.toggle('hide', !p); pfDel.classList.toggle('hide', !p);
+  pfDel.textContent='🗑 Удалить ученика'; delete pfDel.dataset.sure;
+  renderAvs();
+  if(id) pfName.scrollIntoView({behavior:'smooth', block:'center'});
+}
+function renderAvs(){ pfAvs.innerHTML = AVATARS.map(a=>`<span class="chip ${a===pickAv?'on':''}" onclick="pickAv='${a}';renderAvs()">${a}</span>`).join('') }
+function saveProfile(){
+  const name = pfName.value.trim(); if(!name){ toast('Напиши имя'); pfName.focus(); return }
+  const grade = +pfGrade.value, age = +pfAge.value || null;
+  let p = DB.list.find(x=>x.id===editId);
+  if(p){
+    if(p.grade!==grade) p.set.lvls=[grade];   // grade changed — select the new grade
+    Object.assign(p,{name, age, grade, av:pickAv});
+  } else {
+    const first = !DB.list.length;
+    p = {id:'p'+Date.now().toString(36), name, age, grade, av:pickAv, created:Date.now(),
+         stats: first && LEGACY.stats || {}, set: Object.assign({}, first && LEGACY.set || {}, {lvls:[grade], cats:null}), hist:[]};
+    DB.list.push(p);
+  }
+  editId = null; pfName.value = pfAge.value = ''; pickAv = AVATARS[DB.list.length % AVATARS.length];
+  useProfile(p.id); go('home');
+}
+function delProfile(btn){
+  if(!btn.dataset.sure){ btn.dataset.sure=1; btn.textContent='Точно удалить вместе с результатами? Нажми ещё раз'; return }
+  DB.list = DB.list.filter(x=>x.id!==editId);
+  if(PROF && PROF.id===editId) useProfile(DB.list[0] ? DB.list[0].id : null);
+  editId = null; save(); renderProfiles(); toast('Ученик удалён');
+}
+function copyBackup(){
+  const t = JSON.stringify({v:1, profiles:DB, my:MY}); bkTxt.value = t;
+  try{ navigator.clipboard.writeText(t).then(()=>toast('Код скопирован — сохрани его'),()=>{bkTxt.select();toast('Выдели текст в поле и скопируй')}) }catch(e){ bkTxt.select(); toast('Выдели текст в поле и скопируй') }
+}
+function restoreBackup(){
+  try{
+    const d = JSON.parse(bkTxt.value);
+    if(!d.profiles || !Array.isArray(d.profiles.list)) throw 0;
+    // merge: learners with the same id are replaced, others are added
+    d.profiles.list.forEach(p=>{ DB.list = DB.list.filter(x=>x.id!==p.id); DB.list.push(p) });
+    (d.my||[]).forEach(w=>{ MY = MY.filter(x=>x.en!==w.en); MY.push(w) });
+    useProfile(PROF ? PROF.id : DB.list[0].id); renderProfiles(); toast('Восстановлено учеников: '+d.profiles.list.length);
+  }catch(e){ toast('Не получилось прочитать код') }
+}
+
+// ---------- history ----------
+function clearHist(btn){
+  if(!btn.dataset.sure){ btn.dataset.sure=1; btn.textContent=`Удалить все отчёты (${PROF.name})? Нажми ещё раз`; return }
+  PROF.hist = []; save(); renderHistory(); toast('Отчёты удалены');
+}
+function delHist(i){ PROF.hist.splice(i,1); save(); renderHistory(); }
+// small topic icons (hover/tap shows the topic name)
+function catIcons(cats){
+  return (cats||[]).map(c=>`<span title="${esc(c)}" onclick="toast('${esc(c)}')">${EMO[c]||'📁'}</span>`).join('');
+}
+function renderHistory(){
+  const h = PROF.hist, mine = k => S.lang==='ro' ? k.startsWith('ro:') : !k.startsWith('ro:');
+  const ent = Object.entries(STATS).filter(([k])=>mine(k)).map(([,v])=>v);
+  const learned = ent.filter(v=>v.ok>=3 && v.ok>v.bad*3).length;
+  const passed = h.filter(x=>x.pass).length;
+  const avg = h.length ? Math.round(h.reduce((s,x)=>s+x.pct,0)/h.length) : 0;
+  // words with most mistakes
+  const top = Object.entries(STATS).filter(([k,v])=>mine(k) && v.bad>0).sort((a,b)=>(b[1].bad-b[1].ok)-(a[1].bad-a[1].ok)).slice(0,12);
+  const byEn = new Map(allWords().map(w=>[w.en,w]));
+  const fmt = t => new Date(t).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('histBox').innerHTML = `
+    <h2>📈 Результаты: ${PROF.av} ${esc(PROF.name)} <span class="muted">${PROF.grade} класс</span></h2>
+    <div class="tiles">
+      <div><div class="big-num">${h.length}</div>тестов</div>
+      <div><div class="big-num">${passed}</div>сдано ✅</div>
+      <div><div class="big-num">${avg}%</div>средний результат</div>
+      <div><div class="big-num">${learned}</div>слов выучено</div>
+    </div>
+    ${top.length?`<h2 style="margin-top:16px">😓 Трудные слова (${LG().flag} ${LG().name})</h2><div class="mist">${top.map(([k])=>{const w=byEn.get(k.replace(/^ro:/,''));return w?`<span>${esc(miniImg(w))} <b>${esc(tw(w))}</b> — ${esc(w.ru)}</span>`:''}).join('')}</div>
+      <div class="row" style="justify-content:center;margin-top:10px"><button class="pri" onclick="startLearn(true)">📖 Учить трудные слова</button></div>`:''}
+    <div class="row" style="justify-content:space-between;margin-top:16px"><h2 style="margin:0">🗓 Последние тесты</h2>
+      ${h.length?`<button id="histClr" onclick="clearHist(this)">🗑 Очистить отчёты</button>`:''}</div>
+    ${h.length?`<table class="hist"><tr class="muted"><td>Когда</td><td>Язык</td><td>Классы</td><td>Темы</td><td>Результат</td><td></td></tr>${h.slice().reverse().slice(0,30).map((x,k)=>`<tr>
+      <td>${fmt(x.d)}</td><td>${(LANGS[x.lang]||LANGS.en).flag}</td><td>${x.lv.join(', ')}</td><td class="hcats">${catIcons(x.cats)}</td><td><b>${x.ok}/${x.total}</b> (${x.pct}%)${x.stopped?' <span class="muted">остановлен</span>':''}</td><td>${x.pass?'✅ сдан':'❌ не сдан'} <span class="muted">(нужно ${x.passPct||80}%)</span></td><td><button title="Удалить этот отчёт" style="padding:4px 8px" onclick="delHist(${h.length-1-k})">✖</button></td></tr>`).join('')}</table>`
+      :'<p class="muted">Тестов пока не было. Пройди первый!</p>'}
+    <div class="row" style="justify-content:center;margin-top:14px"><button onclick="go('home')">🏠 Домой</button><button onclick="go('profiles')">👥 Сменить ученика</button></div>`;
+}
+
+// ---------- settings ----------
+function renderSettings(){
+  document.getElementById('setLangs').innerHTML = Object.entries(LANGS).map(([k,l])=>`<span class="chip ${S.lang===k?'on':''}" style="font-size:18px;padding:8px 16px" onclick="setLang('${k}')">${l.flag} ${l.name}</span>`).join('')
+    + `<span class="muted" style="flex-basis:100%;font-size:13px">Голос, микрофон и статистика ниже — для выбранного языка</span>`;
+  loadVoices();
+  document.getElementById('micInfo').innerHTML = canListen()
+    ? `Сейчас используется: <b>${engineName()}</b>. Нажми кнопку и скажи слово — увидишь, что распознано.`
+    : `⚠️ Распознавание речи здесь недоступно. Где работает:<br>
+       • <b>файл-версия</b> (english-cards.html) в браузере <b>Chrome</b> на компьютере или Android — нужен интернет;<br>
+       • на iPhone/iPad — в <b>Safari</b> при включённых Siri и Диктовке (открывать файл через Safari, а не предпросмотр «Файлов»);<br>
+       • <b>опубликованная страница</b> — только в Chrome/Edge на компьютере (диктовка Claude; в мобильном приложении Claude не работает).`;
+  document.getElementById('micTestBtn').classList.toggle('hide', !canListen());
+  renderPron();
+  document.getElementById('micTestRes').textContent='';
+  document.getElementById('voiceTitle').textContent = `🔊 Голос (${LG().flag} ${LG().name})`;
+  document.getElementById('rate').value = S.rate;
+  document.getElementById('autoSay').checked = S.autoSay;
+  document.getElementById('sounds').checked = S.sounds;
+  const pp = document.getElementById('passPct');
+  pp.innerHTML = [50,60,70,75,80,85,90,95,100].map(v=>`<option value="${v}">${v}%</option>`).join('');
+  pp.value = S.passPct;
+  document.getElementById('showIpa').checked = S.showIpa;
+  document.getElementById('showRu').checked = S.showRu;
+  const ent = Object.entries(STATS).filter(([k])=>S.lang==='ro' ? k.startsWith('ro:') : !k.startsWith('ro:'));
+  const ok = ent.reduce((s,[,v])=>s+v.ok,0), bad = ent.reduce((s,[,v])=>s+v.bad,0);
+  const learned = ent.filter(([,v])=>v.ok>=3 && v.ok>v.bad*3).length;
+  document.getElementById('statBox').innerHTML = `Всего ответов: ${ok+bad} · правильных: ${ok} · ошибок: ${bad}<br>Выучено слов (3+ правильных ответа): <b>${learned}</b> · трудных: <b>${hardWords().length}</b>`;
+}
+
+if(!BASE.length) toast('Не найден файл words.js — положи его рядом с index.html');
+updateWho();
+useProfile(DB.cur);
+updateMicUI();
+go(PROF ? 'home' : 'profiles');
+</script>
+</body>
+</html>
