@@ -68,7 +68,7 @@
   .actionbar .modes{gap:10px} .actionbar .mode{padding:16px 10px;font-size:21px;box-shadow:0 4px 14px #0000001f}
   .grades{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
   .grades .chip{text-align:center;padding:8px 0;font-size:15px;border-radius:12px;cursor:pointer;white-space:nowrap}
-  .grades .chip b{font-size:17px} .grades .chip{min-width:0;overflow:hidden}
+  .grades .chip b{font-size:17px} .grades .chip.mine{box-shadow:inset 0 0 0 2px var(--ink)} .grades .chip{min-width:0;overflow:hidden}
   @media (max-width:560px){
     .actionbar .modes{grid-template-columns:1fr 1fr}.actionbar .mode{font-size:17px;padding:13px 6px}
     .grades{grid-template-columns:repeat(4,1fr);gap:5px} .grades .chip{font-size:13px;padding:7px 0} .grades .chip b{font-size:15px}
@@ -196,7 +196,7 @@
     </div>
   </div>
   <div class="panel cpt">
-    <h2 style="margin:0 0 8px">🎒 Класс <span class="muted" style="font-weight:400;font-size:14px">(класс — сколько слов)</span></h2>
+    <h2 style="margin:0 0 8px">🎒 Класс <span class="muted" style="font-weight:400;font-size:14px">(класс — сколько слов; в рамке — класс ученика)</span></h2>
     <div class="chips sm" id="lvls"></div>
   </div>
   <div class="row" style="justify-content:center">
@@ -477,7 +477,7 @@ function picHTML(w){
 // ---------- speech ----------
 // ---------- speech ----------
 // The voice is chosen on EVERY call by the current language, so switching English/Romanian
-// always switches the reader. Order: device voice of that language -> Claude voice (published page) -> warning.
+// always switches the reader. Order: recorded audio (Romanian) -> device voice of that language -> warning.
 const HAS_SS = 'speechSynthesis' in window;
 const norm = l => (l||'').replace('_','-').toLowerCase();
 function langVoices(){
@@ -508,7 +508,7 @@ function reader(){
 }
 function pickVoice(){ const r = reader(); return r.kind==='device' ? r.v : null }
 let CTTS = null;   // Claude voice, only on the published page in a desktop browser
-try{ if(window.claude && claude.use) claude.use('tts').then(t=>{ CTTS=t; loadVoices() }).catch(()=>{}) }catch(e){}
+// Claude voice is switched off on purpose (CTTS stays null): the app does not use Claude services.
 const warned = {};
 function loadVoices(){
   const sel = document.getElementById('voiceSel'); if(!sel) return;
@@ -532,7 +532,6 @@ function renderVoiceInfo(){
     • <b>Mac</b>: Системные настройки → Универсальный доступ → Устный контент → Системный голос → Управление голосами → ${S.lang==='ro'?'Румынский':'Английский'} → улучшенная версия<br>
     • <b>Android</b>: Настройки → Язык → Синтез речи → Google → установите голосовые данные «${S.lang==='ro'?'Română':'English (UK)'}»<br>
     • <b>Windows</b>: откройте страницу в браузере <b>Edge</b> — там есть естественные голоса ${S.lang==='ro'?'Alina и Emil':'Libby, Ryan, Sonia'}<br>
-    • <b>Компьютер, опубликованная версия</b>: в списке выше есть голоса <b>✨ Claude</b> (Chrome, Edge, Firefox; не Safari)<br>
     После установки перезапустите браузер.` : '');
 }
 if(HAS_SS){ speechSynthesis.onvoiceschanged = loadVoices; }
@@ -575,17 +574,13 @@ function speak(text, rate){
 
 // ---------- speech recognition: the learner says the word ----------
 // Browser recognizer (has language: en-GB / ro-RO) in the file version; on the published page the
-// microphone is blocked for pages, so Claude dictation is used there (Chromium only, language auto).
+// microphone is blocked for pages, so recognition is not available there.
 const NativeSR = window.SpeechRecognition || window.webkitSpeechRecognition;
 // On the published page (inside a frame) the browser blocks the microphone for the page itself,
-// so only Claude dictation can work there. In the file version the browser recognizer is used.
+// In the file version the browser recognizer is used.
 const IN_FRAME = window.self !== window.top;
 let CDICT = null, dictHandler = null;
-try{ if(window.claude && claude.use) claude.use('dictation').then(d=>{ if(!d) return; CDICT=d;
-  d.onFinal(({text})=>dictHandler && dictHandler.final(text));
-  d.onPartial(({text})=>dictHandler && dictHandler.partial(text));
-  d.onState(({state, reason})=>{ if(state==='idle' && dictHandler) dictHandler.end(reason) });
-  updateMicUI() }).catch(()=>{}) }catch(e){}
+// Claude dictation is switched off on purpose (CDICT stays null): the app does not use Claude services.
 let nativeBlocked = false;
 const useNative = () => !!NativeSR && !nativeBlocked && !IN_FRAME;
 const canListen = () => useNative() || !!CDICT;
@@ -689,7 +684,7 @@ const PRON = {
   off:    {name:'Выключено'},
   record: {name:'🎙️ Запиши и сравни', btn:'🎙️ Запиши себя', hint:'Без распознавания: ребёнок записывает слово и слушает себя после правильного произношения. Родитель может нажать 👍 или 🔁.'},
   whisper:{name:'🤖 Модель Whisper', btn:'🤖 Скажи сам', hint:'Нейросеть распознаёт речь прямо на устройстве (английский и румынский). Один раз нужно скачать модель, дальше работает быстрее.'},
-  asr:    {name:'🌐 Распознавание браузера', btn:'🎤 Скажи сам', hint:'Встроенное распознавание браузера (Chrome, Safari) или диктовка Claude на опубликованной странице. Бывает неточным.'}
+  asr:    {name:'🌐 Распознавание браузера', btn:'🎤 Скажи сам', hint:'Встроенное распознавание браузера (Chrome, Safari), работает в файл-версии. Бывает неточным.'}
 };
 const canRecord = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) && !IN_FRAME;
 const pronAvailable = () => S.pron==='asr' ? canListen() : (S.pron==='record'||S.pron==='whisper') ? canRecord() : false;
@@ -953,8 +948,8 @@ function lvlChips(fn, compact){
   if(compact){
     const all = allWords(), lv = [...new Set(all.map(w=>+w.lvl))].sort((a,b)=>a-b), cur = lvlMax(), my = PROF ? PROF.grade : 0;
     const inCats = all.filter(w=>catOk(w) && hasLang(w));   // words in the selected topics, grade includes lower grades
-    return `<div class="grades">${lv.map(l=>`<span class="chip ${l===cur?'on':l<cur?'part':''}" title="${l} класс" onclick="${fn}(${l})"><b>${l}</b> — ${inCats.filter(w=>+w.lvl<=l).length}</span>`).join('')}</div>`
-      + `<div class="muted" style="margin-top:6px;font-size:14px">Выбран <b>${cur} класс</b> — ${lvlText()}${my&&cur!==my?` · <a href="#" onclick="${fn}(${my});return false">↩ класс ученика (${my})</a>`:my?' 🎒':''}</div>`;
+    return `<div class="grades">${lv.map(l=>`<span class="chip ${l===cur?'on':l<cur?'part':''} ${l===my?'mine':''}" title="${l} класс${l===my?' — класс ученика':''}" onclick="${fn}(${l})"><b>${l}</b> — ${inCats.filter(w=>+w.lvl<=l).length}</span>`).join('')}</div>`
+      ;
   }
   const all = allWords(), lv = [...new Set(all.map(w=>+w.lvl))].sort((a,b)=>a-b);
   // counts include all lower grades and only the selected topics
@@ -963,7 +958,7 @@ function lvlChips(fn, compact){
     + (compact ? (my&&cur!==my?`<a href="#" style="align-self:center;font-size:14px" onclick="${fn}(${my});return false">↩ класс ученика (${my})</a>`:'')
        : `<p class="muted" style="margin:8px 0 0">Выбран <b>${cur} класс</b> — ${lvlText()}${my&&cur!==my?` · <a href="#" onclick="${fn}(${my});return false">вернуть класс ученика (${my})</a>`:''}</p>`);
 }
-function pickLvl(l){ S.lvls = [l] }
+function pickLvl(l){ S.lvls = [l]; toast(`🎒 Выбран ${l} класс — ${lvlText()}`) }
 function tToggleLvl(l){
   // changing the grade here means: test from the selected grades, not from the learn screen
   pickLvl(l); lastSection='home'; save(); renderTestSetup();
@@ -1185,7 +1180,7 @@ const gradeWord = g => `${g} класс`;
 function renderProfiles(){
   document.getElementById('profList').innerHTML = DB.list.map(p=>{
     const last=p.hist[p.hist.length-1];
-    return `<div class="prof ${PROF&&p.id===PROF.id?'cur':''}" onclick="useProfile('${p.id}');go('home')">
+    return `<div class="prof ${PROF&&p.id===PROF.id?'cur':''}" onclick="useProfile('${p.id}');go('home');toast(PROF.av+' '+PROF.name+': выбран '+lvlMax()+' класс — '+lvlText())">
       <button class="ed" onclick="event.stopPropagation();editProfile('${p.id}')">✏️</button>
       <div class="av">${p.av}</div><div class="nm">${esc(p.name)}</div>
       <div class="muted">${gradeWord(p.grade)}${p.age?`, ${p.age} лет`:''}</div>
@@ -1219,7 +1214,7 @@ function saveProfile(){
     DB.list.push(p);
   }
   editId = null; pfName.value = pfAge.value = ''; pickAv = AVATARS[DB.list.length % AVATARS.length];
-  useProfile(p.id); go('home');
+  useProfile(p.id); go('home'); toast(`${p.av} ${p.name}: выбран ${lvlMax()} класс — ${lvlText()}`);
 }
 function delProfile(btn){
   if(!btn.dataset.sure){ btn.dataset.sure=1; btn.textContent='Точно удалить вместе с результатами? Нажми ещё раз'; return }
@@ -1289,8 +1284,7 @@ function renderSettings(){
     ? `Сейчас используется: <b>${engineName()}</b>. Нажми кнопку и скажи слово — увидишь, что распознано.`
     : `⚠️ Распознавание речи здесь недоступно. Где работает:<br>
        • <b>файл-версия</b> (english-cards.html) в браузере <b>Chrome</b> на компьютере или Android — нужен интернет;<br>
-       • на iPhone/iPad — в <b>Safari</b> при включённых Siri и Диктовке (открывать файл через Safari, а не предпросмотр «Файлов»);<br>
-       • <b>опубликованная страница</b> — только в Chrome/Edge на компьютере (диктовка Claude; в мобильном приложении Claude не работает).`;
+       • на iPhone/iPad — в <b>Safari</b> при включённых Siri и Диктовке (открывать файл через Safari, а не предпросмотр «Файлов»);`;
   document.getElementById('micTestBtn').classList.toggle('hide', !canListen());
   renderPron();
   document.getElementById('micTestRes').textContent='';
