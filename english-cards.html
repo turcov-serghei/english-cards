@@ -116,6 +116,12 @@
   .hist td{white-space:nowrap}
   .hist td.hcats{white-space:normal;font-size:18px;letter-spacing:2px;max-width:220px;cursor:help}
   .big-num{font-size:30px;font-weight:900;color:var(--pri)}
+  .pbar{display:flex;height:10px;background:#e6e8f2;border-radius:99px;overflow:hidden;margin:8px 0} .pbar i{display:block;height:100%}
+  .rec{display:flex;justify-content:space-between;align-items:center;gap:8px;border-left:5px solid;background:#f6f7fb;border-radius:12px;padding:8px 10px;margin-top:6px;font-size:15px}
+  .rec button{padding:6px 10px;font-size:14px}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;font-size:13px;color:var(--muted);margin-bottom:8px} .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px}
+  .ptopics{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px} .ptopic{background:#f6f7fb;border-radius:12px;padding:8px 10px;border-left:5px solid}
+  .ptopic button{padding:4px 10px;font-size:13px}
   .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;text-align:center}
   .tiles>div{background:#f6f7fb;border-radius:16px;padding:10px}
   #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,40px);opacity:0;background:#2b2d42;color:#fff;padding:12px 18px;border-radius:14px;z-index:100;transition:.3s;max-width:90vw;text-align:center;pointer-events:none}
@@ -201,6 +207,7 @@
     <h2 style="margin:0 0 8px">🎒 Класс <span class="muted" style="font-weight:400;font-size:14px">(у выбранного — сколько слов, у других — на сколько больше или меньше; в рамке — класс ученика)</span></h2>
     <div class="chips sm" id="lvls"></div>
   </div>
+  <div class="panel cpt" id="recs"></div>
   <div class="row" style="justify-content:center">
     <button onclick="startLearn(true)">😓 Трудные слова</button>
     <button onclick="go('add')">➕ Мои слова</button>
@@ -2035,6 +2042,7 @@ function renderHome(){
   document.getElementById('catBtn').textContent = S.catsOpen ? '▲ Свернуть' : '✏️ Выбрать';
   document.getElementById('lvls').innerHTML = lvlChips('toggleLvl', true);
   document.getElementById('countInfo').textContent = `Слов для занятий: ${pool().length}`;
+  renderRecs();
 }
 function toggleCat(c){
   let cs = S.cats || categories();
@@ -2059,6 +2067,7 @@ function shuffleLearn(){L.list=shuffle(L.list);L.i=0;lShow()}
 function lShow(){
   const w = L.list[L.i];
   nvPrefetch([0,1,2].map(d=>L.list[L.i+d]).filter(Boolean).map(tw));
+  { const st = STATS[sk(w)] || (STATS[sk(w)]={ok:0,bad:0}); st.seen = (st.seen||0)+1; save() }   // studied in learning
   document.getElementById('lCat').textContent = (EMO[w.cat]||'')+' '+w.cat;
   document.getElementById('lPic').outerHTML = picHTML(w).replace('class="pic','id="lPic" class="pic');
   document.getElementById('lEn').textContent = tw(w);
@@ -2413,6 +2422,98 @@ function delHist(i){ PROF.hist.splice(i,1); save(); renderHistory(); }
 function catIcons(cats){
   return (cats||[]).map(c=>`<span title="${esc(c)}" onclick="toast('${esc(c)}')">${EMO[c]||'📁'}</span>`).join('');
 }
+// ---------- progress: how much of the material is studied / tested, by topic ----------
+// grey — not started, blue — studied in learning but not tested, green — tested well (≥85% right, ≥80% of words),
+// yellow — partly tested or some mistakes, red — many mistakes (<60% right)
+const PCOL = {green:'#2bb673', yellow:'#ffc23d', red:'#ef476f', blue:'#7aa2ff', grey:'#d9dce8'};
+const PNAME = {green:'проверено, хорошо', yellow:'частично / есть ошибки', red:'много ошибок', blue:'изучено, не проверено', grey:'не начато'};
+function progOf(words){
+  const r = {total:words.length, seen:0, tested:0, learned:0, weak:0, ok:0, bad:0, words};
+  words.forEach(w=>{ const s = STATS[sk(w)]; if(!s) return;
+    if(s.seen || s.ok || s.bad) r.seen++;
+    if(s.ok || s.bad){ r.tested++; r.ok += s.ok; r.bad += s.bad }
+    if(s.ok>=3 && s.ok>s.bad*3) r.learned++; else if(s.bad>0 && s.bad>=s.ok*0.5) r.weak++ });
+  r.acc = r.ok+r.bad ? Math.round(r.ok/(r.ok+r.bad)*100) : null;
+  r.color = !r.tested ? (r.seen ? 'blue' : 'grey') : r.acc<60 ? 'red' : (r.acc<85 || r.tested<r.total*0.8) ? 'yellow' : 'green';
+  return r;
+}
+// material = all topics of the selected grade (with lower grades), current language
+const progWordsAll = () => allWords().filter(w=>hasLang(w) && lvlOk(w));
+function progTopics(){
+  const all = progWordsAll();
+  return categories().map(c=>[c, progOf(all.filter(w=>w.cat===c))]).filter(([,r])=>r.total>0);
+}
+const pct = (a,b) => b ? Math.round(a/b*100) : 0;
+function progBar(r){   // stacked bar: learned / tested / with many mistakes / studied / rest
+  const seg = (n,c) => n>0 ? `<i style="width:${n/r.total*100}%;background:${c}"></i>` : '';
+  return `<div class="pbar">${seg(r.learned,PCOL.green)}${seg(r.tested-r.learned-r.weak,PCOL.yellow)}${seg(r.weak,PCOL.red)}${seg(r.seen-r.tested,PCOL.blue)}</div>`;
+}
+const topicWords = c => progWordsAll().filter(w=>w.cat===c);
+// a test right on a given list of words (quick test, a topic, hard words)
+function startTestOn(list, len){
+  list = [...new Map(list.map(w=>[w.en,w])).values()];
+  if(!list.length){ toast('Нет слов для теста'); return }
+  len = Math.min(len || 10, Math.max(list.length, 5));
+  let qs = []; while(qs.length<len) qs.push(...shuffle(list));
+  T = {qs:qs.slice(0,len), i:0, ok:0, mistakes:[], src:list};
+  go('test'); tShow();
+}
+function learnOn(list){ if(!list.length){ toast('Нет слов'); return } L = {list, i:0, hard:false}; lastSection='learn'; go('learn'); lShow() }
+const testTopic = c => { const ws = topicWords(c), seen = ws.filter(w=>{const s=STATS[sk(w)];return s&&(s.seen||s.ok||s.bad)}); startTestOn(seen.length>=4 ? seen : ws, 10) };
+const learnTopic = c => { const ws = topicWords(c), st = w => STATS[sk(w)]||{};
+  // weak and not studied words first
+  learnOn([...ws.filter(w=>st(w).bad>0 && st(w).bad>=(st(w).ok||0)*0.5), ...ws.filter(w=>!st(w).seen && !st(w).ok && !st(w).bad), ...ws].filter((w,i,a)=>a.findIndex(x=>x.en===w.en)===i)) };
+function quickTest(){
+  const all = progWordsAll(), st = w => STATS[sk(w)];
+  const weak = all.filter(w=>{const s=st(w);return s && s.bad>0 && s.bad>=s.ok*0.5});
+  const studied = all.filter(w=>{const s=st(w);return s && (s.seen||s.ok) && !(s.ok>=3 && s.ok>s.bad*3)});
+  const pool = [...shuffle(weak).slice(0,4), ...shuffle(studied)];
+  startTestOn(pool.length>=4 ? pool : all, 10);
+}
+// recommendations for the home screen
+function recs(){
+  const T_ = progTopics(), out = [], q = c => `'${esc(c).replace(/'/g,"\\'")}'`;
+  const hard = hardWords().filter(lvlOk);
+  if(hard.length>=3) out.push({c:'red', t:`😓 Трудные слова: <b>${hard.length}</b> — повтори их`, b:[['📖 Учить','startLearn(true)'],['✅ Тест','startTestOn(hardWords().filter(lvlOk),10)']]});
+  const red = T_.filter(([,r])=>r.color==='red').sort((a,b)=>a[1].acc-b[1].acc)[0];
+  if(red) out.push({c:'red', t:`${EMO[red[0]]||'📁'} «${esc(red[0])}» — много ошибок (${red[1].acc}% верно)`, b:[['📖 Повторить',`learnTopic(${q(red[0])})`],['✅ Тест',`testTopic(${q(red[0])})`]]});
+  const blue = T_.filter(([,r])=>r.color==='blue').sort((a,b)=>b[1].seen-a[1].seen)[0];
+  if(blue) out.push({c:'blue', t:`${EMO[blue[0]]||'📁'} «${esc(blue[0])}» — изучено ${blue[1].seen} из ${blue[1].total}, ещё не проверено`, b:[['✅ Проверить',`testTopic(${q(blue[0])})`]]});
+  const yel = T_.filter(([,r])=>r.color==='yellow').sort((a,b)=>(b[1].total-b[1].tested)-(a[1].total-a[1].tested))[0];
+  if(yel) out.push({c:'yellow', t:`${EMO[yel[0]]||'📁'} «${esc(yel[0])}» — проверено ${yel[1].tested} из ${yel[1].total}, ${yel[1].acc}% верно`, b:[['📖 Доучить',`learnTopic(${q(yel[0])})`],['✅ Тест',`testTopic(${q(yel[0])})`]]});
+  const grey = T_.filter(([,r])=>r.color==='grey').sort((a,b)=>Math.min(...a[1].words.map(w=>+w.lvl))-Math.min(...b[1].words.map(w=>+w.lvl)) || b[1].total-a[1].total)[0];
+  if(grey && out.length<3) out.push({c:'grey', t:`${EMO[grey[0]]||'📁'} Новая тема «${esc(grey[0])}» — ${grey[1].total} слов`, b:[['📖 Начать',`learnTopic(${q(grey[0])})`]]});
+  return out.slice(0,3);
+}
+function renderRecs(){
+  const el = document.getElementById('recs'); if(!el || !PROF) return;
+  const all = progOf(progWordsAll()), list = recs();
+  el.innerHTML = `<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><h2 style="margin:0;font-size:17px">💡 Что дальше</h2>
+      <a href="#" onclick="go('history');return false" class="muted">📈 изучено ${pct(all.seen,all.total)}% · проверено ${pct(all.tested,all.total)}% · выучено ${pct(all.learned,all.total)}%</a></div>
+    ${progBar(all)}
+    ${list.map(r=>`<div class="rec" style="border-left-color:${PCOL[r.c]}"><span>${r.t}</span><span class="row" style="flex-wrap:nowrap">${r.b.map(([l,f])=>`<button onclick="${f}">${l}</button>`).join('')}</span></div>`).join('')}
+    <div class="row" style="justify-content:center;margin-top:8px"><button class="pri" onclick="quickTest()">⚡ Быстрый тест — 10 слов</button></div>`;
+}
+function progressHTML(){
+  const all = progOf(progWordsAll()), tp = progTopics();
+  return `<h2 style="margin-top:16px">📊 Покрытие материала <span class="muted" style="font-weight:400;font-size:14px">${LG().flag} ${LG().name}, ${lvlText()}</span></h2>
+    <div class="tiles">
+      <div><div class="big-num">${all.total}</div>слов в программе</div>
+      <div><div class="big-num" style="color:${PCOL.blue}">${pct(all.seen,all.total)}%</div>изучено (${all.seen})</div>
+      <div><div class="big-num" style="color:#d99a00">${pct(all.tested,all.total)}%</div>проверено (${all.tested})</div>
+      <div><div class="big-num" style="color:${PCOL.green}">${pct(all.learned,all.total)}%</div>выучено (${all.learned})</div>
+      <div><div class="big-num">${all.acc===null?'—':all.acc+'%'}</div>верных ответов</div>
+    </div>
+    ${progBar(all)}
+    <div class="legend">${['green','yellow','red','blue','grey'].map(c=>`<span><i style="background:${PCOL[c]}"></i>${PNAME[c]}</span>`).join('')}</div>
+    <div class="ptopics">${tp.map(([c,r])=>`<div class="ptopic" style="border-left-color:${PCOL[r.color]}">
+      <div class="row" style="justify-content:space-between;flex-wrap:nowrap"><b>${EMO[c]||'📁'} ${esc(c)}</b><span class="muted">${r.total} сл.</span></div>
+      ${progBar(r)}
+      <div class="muted" style="font-size:13px">изучено ${r.seen} · проверено ${r.tested} · выучено ${r.learned}${r.acc!==null?` · <b style="color:${PCOL[r.color]==PCOL.yellow?'#b07d00':PCOL[r.color]}">${r.acc}% верно</b>`:''}</div>
+      <div class="row" style="margin-top:4px"><button onclick="learnTopic('${esc(c).replace(/'/g,"\\'")}')">📖 Учить</button><button onclick="testTopic('${esc(c).replace(/'/g,"\\'")}')">✅ Тест</button></div>
+    </div>`).join('')}</div>
+    <p class="muted" style="font-size:12px">«Изучено» — слово открывали в режиме «Учить» или проверяли; «выучено» — правильно минимум 3 раза и ошибок втрое меньше.</p>`;
+}
 function renderHistory(){
   const h = PROF.hist, mine = k => S.lang==='ro' ? k.startsWith('ro:') : !k.startsWith('ro:');
   const ent = Object.entries(STATS).filter(([k])=>mine(k)).map(([,v])=>v);
@@ -2431,6 +2532,7 @@ function renderHistory(){
       <div><div class="big-num">${avg}%</div>средний результат</div>
       <div><div class="big-num">${learned}</div>слов выучено</div>
     </div>
+    ${progressHTML()}
     ${top.length?`<h2 style="margin-top:16px">😓 Трудные слова (${LG().flag} ${LG().name})</h2><div class="mist">${top.map(([k])=>{const w=byEn.get(k.replace(/^ro:/,''));return w?`<span>${esc(miniImg(w))} <b>${esc(tw(w))}</b> — ${esc(w.ru)}</span>`:''}).join('')}</div>
       <div class="row" style="justify-content:center;margin-top:10px"><button class="pri" onclick="startLearn(true)">📖 Учить трудные слова</button></div>`:''}
     <div class="row" style="justify-content:space-between;margin-top:16px"><h2 style="margin:0">🗓 Последние тесты</h2>
