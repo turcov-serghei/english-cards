@@ -80,6 +80,7 @@
   .passbar .fill{height:100%;border-radius:99px}.passbar .fill.ok{background:var(--ok)}.passbar .fill.bad{background:var(--bad)}
   .passbar .mark{position:absolute;top:-6px;bottom:-6px;width:3px;background:var(--ink);border-radius:2px}
   .passbar .mark span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-size:12px;white-space:nowrap;color:var(--ink);font-weight:700}
+  .pic.noimg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px} .pic.noimg span{font-size:.6em;opacity:.45} .pic.noimg.hint span{font-size:.8em;opacity:1} .pic.noimg small{font-size:16px;color:var(--muted);font-weight:600;letter-spacing:.5px}
   .chip.part{background:#cfdcff;color:var(--ink)}
   .sayres{font-size:18px;min-height:26px;text-align:center;flex-basis:100%}
   .sayres.ok{color:var(--ok);font-weight:800} .sayres.bad{color:var(--bad);font-weight:800}
@@ -459,11 +460,14 @@ function prepSVG(k){
   return `<svg class="psvg" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg"><defs><marker id="ah" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#4f7cff"/></marker></defs>${S[k]||''}</svg>`;
 }
 const isSvgImg = v => typeof v==='string' && v.startsWith('svg:');
-const miniImg = w => isSvgImg(w.img) ? '📍' : /^data:|^https?:/.test(w.img) ? '🖼️' : w.img;
+const miniImg = w => !w.img ? '💬' : isSvgImg(w.img) ? '📍' : /^data:|^https?:/.test(w.img) ? '🖼️' : w.img;
 // animated pictures for actions: Noto animated emoji (anim.js) or CSS animation (.a-<word>)
 const CSS_ANIM = ['run','swim','walk','sing','drink','wash'];
 function picHTML(w){
-  const v = w.img || '❓';
+  // words without a picture (many verbs): a neutral placeholder; picture questions are not used for them in tests
+  // verbs: the emoji is only a hint (it may match a noun), so it is labelled "глагол"
+  if (!w.img || w.cat==='Глаголы') return `<div class="pic noimg${w.img?' hint':''}"><span>${esc(w.img||'💬')}</span><small>${w.cat==='Глаголы'?'глагол':'без картинки'}</small></div>`;
+  const v = w.img;
   if (isSvgImg(v)) return `<div class="pic">${prepSVG(v.slice(4))}</div>`;
   const A = (typeof ANIM!=='undefined') ? ANIM : {};
   if (w.cat==='Действия' && A[w.en]) return `<div class="pic"><img class="anim" src="${A[w.en]}" alt="${esc(v)}"></div>`;
@@ -860,7 +864,7 @@ function go(id){
 }
 
 // ---------- home ----------
-const EMO = {'Животные':'🐾','Фрукты и овощи':'🍎','Еда и напитки':'🍕','Цвета':'🎨','Числа':'🔢','Семья и люди':'👨‍👩‍👧','Тело':'🖐️','Одежда':'👕','Школа':'🎒','Дом':'🏠','Игрушки и игры':'🧸','Транспорт':'🚗','Природа и погода':'🌦️','Действия':'🏃','Профессии':'👩‍⚕️','Спорт':'⚽','Время года и праздники':'🎄','Город':'🏙️','Путешествия':'🧳','Наука и техника':'🔬','Здоровье':'💊','Музыка и искусство':'🎻','Инструменты':'🔧','Общество и государство':'🏛️','История и культура':'🏺','Знаки и символы':'⚠️','Офис и работа':'💼','Предлоги':'📍','Мои слова':'⭐'};
+const EMO = {'Животные':'🐾','Фрукты и овощи':'🍎','Еда и напитки':'🍕','Цвета':'🎨','Числа':'🔢','Семья и люди':'👨‍👩‍👧','Тело':'🖐️','Одежда':'👕','Школа':'🎒','Дом':'🏠','Игрушки и игры':'🧸','Транспорт':'🚗','Природа и погода':'🌦️','Действия':'🏃','Профессии':'👩‍⚕️','Спорт':'⚽','Время года и праздники':'🎄','Город':'🏙️','Путешествия':'🧳','Наука и техника':'🔬','Здоровье':'💊','Музыка и искусство':'🎻','Инструменты':'🔧','Общество и государство':'🏛️','История и культура':'🏺','Знаки и символы':'⚠️','Офис и работа':'💼','Предлоги':'📍','Глаголы':'💬','Мои слова':'⭐'};
 function renderHome(){
   document.getElementById('langs').innerHTML = `<span class="muted" style="align-self:center">Язык:</span>` + Object.entries(LANGS).map(([k,l])=>`<span class="chip ${S.lang===k?'on':''}" onclick="setLang('${k}')">${l.flag} ${l.name}</span>`).join('');
   const last = PROF.hist[PROF.hist.length-1];
@@ -1007,21 +1011,24 @@ function startTest(){
 }
 // wrong options come only from the words being tested (same topic first);
 // the rest of the dictionary is used only if the tested set is too small
-function distractors(w){
+function distractors(w, needPic){
   const src = T.src, all = allWords();
-  const ok = x => hasLang(x) && x.en!==w.en && x.img!==w.img && x.ru!==w.ru && tw(x).toLowerCase()!==tw(w).toLowerCase();
+  const ok = x => hasLang(x) && x.en!==w.en && (!needPic || (x.img && x.cat!=='Глаголы')) && (!w.img || x.img!==w.img) && x.ru!==w.ru && tw(x).toLowerCase()!==tw(w).toLowerCase();
   const tiers = [
     src.filter(x=>ok(x) && x.cat===w.cat), src.filter(x=>ok(x) && x.cat!==w.cat),
     all.filter(x=>ok(x) && x.cat===w.cat), all.filter(ok)
   ].map(shuffle);
-  const res=[]; for(const x of tiers.flat()){ if(res.length===3)break; if(!res.some(r=>r.en===x.en||r.img===x.img)) res.push(x) }
+  const res=[]; for(const x of tiers.flat()){ if(res.length===3)break; if(!res.some(r=>r.en===x.en||(x.img && r.img===x.img && x.cat!=='Глаголы' && r.cat!=='Глаголы'))) res.push(x) }
   return res;
 }
 function tShow(){
   const w = T.qs[T.i];
-  const qt = selQT(); let type = qt[Math.random()*qt.length|0];
+  // a word without a picture (or a verb, whose picture is only a hint) gets only text questions
+  const PICQ = ['pic2en','en2pic','say2pic'];
+  let qt = selQT(); if(!w.img || w.cat==='Глаголы'){ qt = qt.filter(k=>!PICQ.includes(k)); if(!qt.length) qt = ['ru2en','en2ru'] }
+  let type = qt[Math.random()*qt.length|0];
   T.type = type;
-  const opts = shuffle([w, ...distractors(w)]);
+  const opts = shuffle([w, ...distractors(w, type==='en2pic'||type==='say2pic')]);
   T.opts = opts;
   document.getElementById('tNum').textContent = `Вопрос ${T.i+1} из ${T.qs.length}`;
   document.getElementById('tScore').textContent = `✅ ${T.ok}  ❌ ${T.mistakes.length}  🎯 нужно ${Math.ceil(T.qs.length*S.passPct/100)}`;

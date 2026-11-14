@@ -12,11 +12,12 @@ const fixStress = s => s.split(' ').map(t => {
 const skipped = [];
 for (const f of process.argv.slice(2)) {
   for (const w of JSON.parse(fs.readFileSync(f, 'utf8'))) {
-    if (!w.en || !w.ru || !w.img) { skipped.push([w.en, 'empty']); continue; }
+    // a picture is required except for verbs ("Глаголы"), which may have none
+    if (!w.en || !w.ru || (!w.img && w.cat !== 'Глаголы')) { skipped.push([w.en, 'empty']); continue; }
     if (seenEn.has(w.en.toLowerCase())) { skipped.push([w.en, 'dup word']); continue; }
-    if (seenImg.has(ni(w.img))) { skipped.push([w.en, 'dup pic ' + w.img]); continue; }
-    seenEn.add(w.en.toLowerCase()); seenImg.add(ni(w.img));
-    W.push({ en: w.en, ru: w.ru.toLowerCase(), img: w.img, tr: (w.tr || '').replace(/^[\/\[]|[\/\]]$/g, ''), trRu: fixStress(w.trRu || ''), cat: w.cat, lvl: +w.lvl, ...(w.ro ? { ro: w.ro.replace(/ş/g,'ș').replace(/ţ/g,'ț'), roRu: fixStress(w.roRu || '') } : {}) });
+    if (w.img && w.cat !== 'Глаголы' && seenImg.has(ni(w.img))) { skipped.push([w.en, 'dup pic ' + w.img]); continue; }
+    seenEn.add(w.en.toLowerCase()); if (w.img && w.cat !== 'Глаголы') seenImg.add(ni(w.img));
+    W.push({ en: w.en, ru: w.ru.toLowerCase(), img: w.img || '', tr: (w.tr || '').replace(/^[\/\[]|[\/\]]$/g, ''), trRu: fixStress(w.trRu || ''), cat: w.cat, lvl: +w.lvl, ...(w.ro ? { ro: w.ro.replace(/ş/g,'ș').replace(/ţ/g,'ț'), roRu: fixStress(w.roRu || '') } : {}) });
   }
 }
 fs.writeFileSync(wf, fs.readFileSync(wf, 'utf8').replace(/const WORDS = \[[\s\S]*\];\s*$/, 'const WORDS = [\n' + W.map(w => '  ' + JSON.stringify(w)).join(',\n') + '\n];\n'));
