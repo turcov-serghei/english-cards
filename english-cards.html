@@ -68,7 +68,7 @@
   .actionbar .modes{gap:10px} .actionbar .mode{padding:16px 10px;font-size:21px;box-shadow:0 4px 14px #0000001f}
   .grades{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
   .grades .chip{text-align:center;padding:8px 0;font-size:15px;border-radius:12px;cursor:pointer;white-space:nowrap}
-  .grades .chip b{font-size:17px} .grades .chip.mine{box-shadow:inset 0 0 0 2px var(--ink)} .grades .chip{min-width:0;overflow:hidden}
+  .grades .chip b{font-size:17px} .grades .chip small{display:block;font-size:12px;opacity:.7;line-height:1.1} .grades .chip small.z{opacity:.35} .grades .chip.mine{box-shadow:inset 0 0 0 2px var(--ink)} .grades .chip{min-width:0;overflow:hidden}
   @media (max-width:560px){
     .actionbar .modes{grid-template-columns:1fr 1fr}.actionbar .mode{font-size:17px;padding:13px 6px}
     .grades{grid-template-columns:repeat(4,1fr);gap:5px} .grades .chip{font-size:13px;padding:7px 0} .grades .chip b{font-size:15px}
@@ -196,7 +196,7 @@
     </div>
   </div>
   <div class="panel cpt">
-    <h2 style="margin:0 0 8px">🎒 Класс <span class="muted" style="font-weight:400;font-size:14px">(класс — сколько слов; в рамке — класс ученика)</span></h2>
+    <h2 style="margin:0 0 8px">🎒 Класс <span class="muted" style="font-weight:400;font-size:14px">(всего слов, внизу +новые; в рамке — класс ученика)</span></h2>
     <div class="chips sm" id="lvls"></div>
   </div>
   <div class="row" style="justify-content:center">
@@ -1780,13 +1780,14 @@ function lvlChips(fn, compact){
   if(compact){
     const all = allWords(), lv = [...new Set(all.map(w=>+w.lvl))].sort((a,b)=>a-b), cur = lvlMax(), my = PROF ? PROF.grade : 0;
     const inCats = all.filter(w=>catOk(w) && hasLang(w));   // words in the selected topics, grade includes lower grades
-    return `<div class="grades">${lv.map(l=>`<span class="chip ${l===cur?'on':l<cur?'part':''} ${l===my?'mine':''}" title="${l} класс${l===my?' — класс ученика':''}" onclick="${fn}(${l})"><b>${l}</b> — ${inCats.filter(w=>+w.lvl<=l).length}</span>`).join('')}</div>`
+    return `<div class="grades">${lv.map(l=>{ const tot = inCats.filter(w=>+w.lvl<=l).length, nw = inCats.filter(w=>+w.lvl===l).length;
+      return `<span class="chip ${l===cur?'on':l<cur?'part':''} ${l===my?'mine':''}" title="${l} класс: всего ${tot} сл., из них новых ${nw}${l===my?' — класс ученика':''}" onclick="${fn}(${l})"><b>${l}</b> — ${tot}<small class="${nw?'':'z'}">+${nw}</small></span>` }).join('')}</div>`
       ;
   }
   const all = allWords(), lv = [...new Set(all.map(w=>+w.lvl))].sort((a,b)=>a-b);
   // counts include all lower grades and only the selected topics
   const inCats = all.filter(w=>catOk(w) && hasLang(w)), cur = lvlMax(), my = PROF ? PROF.grade : 0;
-  return lv.map(l=>`<span class="chip ${l===cur?'on':l<cur?'part':''}" onclick="${fn}(${l})">${l===my?'🎒 ':''}${l} класс <b>${inCats.filter(w=>+w.lvl<=l).length}</b></span>`).join('')
+  return lv.map(l=>`<span class="chip ${l===cur?'on':l<cur?'part':''}" onclick="${fn}(${l})">${l===my?'🎒 ':''}${l} класс <b>${inCats.filter(w=>+w.lvl<=l).length}</b> <span class="muted">(+${inCats.filter(w=>+w.lvl===l).length})</span></span>`).join('')
     + (compact ? (my&&cur!==my?`<a href="#" style="align-self:center;font-size:14px" onclick="${fn}(${my});return false">↩ класс ученика (${my})</a>`:'')
        : `<p class="muted" style="margin:8px 0 0">Выбран <b>${cur} класс</b> — ${lvlText()}${my&&cur!==my?` · <a href="#" onclick="${fn}(${my});return false">вернуть класс ученика (${my})</a>`:''}</p>`);
 }
