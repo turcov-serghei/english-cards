@@ -2145,7 +2145,8 @@ function answer(k, btn){
   else if(T.type!=='en2ru') document.getElementById('tQ').insertAdjacentHTML('beforeend',`<div class="ru">${esc(w.ru)}</div>`);
   if(T.type!=='en2ru') document.getElementById('tQ').insertAdjacentHTML('beforeend',`<div style="font-size:22px;font-weight:800;margin-top:6px">${esc(tw(w))}</div><div class="tr">${trHTML(w)}</div>`);
   sfx(right);
-  if(S.sounds) setTimeout(()=>speak(tw(w)), right?450:650); else speak(tw(w));
+  // say the word only after a wrong answer, so the child hears the right one
+  if(!right){ if(S.sounds) setTimeout(()=>speak(tw(w)), 650); else speak(tw(w)); }
   save();
   setTimeout(()=>{ T.i++; if(T.i>=T.qs.length) endTest(); else tShow(); }, right?1500:2600);
 }
