@@ -1541,6 +1541,10 @@ function voiceScore(v){
   if(/premium|премиум/.test(t)) s+=50; else if(/enhanced|улучш|améli|erweit/.test(t)) s+=40;
   if(/natural|neural/.test(t)) s+=35; if(/online/.test(t)) s+=10; if(/google/.test(t)) s+=25;
   if(/compact|eloquence|novelty/.test(t)) s-=20;
+  // Apple "fun" voices (Albert, Bad News, Zarvox…) and old robotic ones: on iPhone they come first in the list and sound awful
+  if(/\b(albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|deranged|hysterical|pipe organ|fred|junior|kathy|ralph|princess|grandma|grandpa|rocko|shelley|sandy|flo|eddy|reed)\b/.test(t)) s-=100;
+  // good standard Apple voices
+  if(/\b(samantha|ava|allison|susan|tom|alex|daniel|kate|serena|oliver|karen|moira|tessa|rishi|ioana)\b/.test(t)) s+=15;
   if(norm(v.lang)===norm(LG().def)) s+=5;
   return s;
 }
