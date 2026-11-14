@@ -2201,7 +2201,8 @@ function tShow(){
   const picOpts = type==='en2pic'||type==='say2pic';
   document.getElementById('tOpts').innerHTML = opts.map((o,k)=>
     `<button class="opt" onclick="answer(${k},this)">${picOpts?picHTML(o):type==='en2ru'?esc(o.ru):esc(tw(o))}</button>`).join('');
-  if(type==='say2pic'||((type==='en2pic'||type==='en2ru')&&S.autoSay)) setTimeout(()=>speak(tw(w)),250);
+  T.spoke = type==='say2pic'||((type==='en2pic'||type==='en2ru')&&S.autoSay);   // the word was already heard in the question
+  if(T.spoke) setTimeout(()=>speak(tw(w)),250);
 }
 async function sayTest(){
   const w = T.qs[T.i], btn = document.getElementById('tMic'), res = document.getElementById('tSayRes');
@@ -2247,8 +2248,8 @@ function answer(k, btn){
   else if(T.type!=='en2ru') document.getElementById('tQ').insertAdjacentHTML('beforeend',`<div class="ru">${esc(w.ru)}</div>`);
   if(T.type!=='en2ru') document.getElementById('tQ').insertAdjacentHTML('beforeend',`<div style="font-size:22px;font-weight:800;margin-top:6px">${esc(tw(w))}</div><div class="tr">${trHTML(w)}</div>`);
   sfx(right);
-  // say the word only after a wrong answer, so the child hears the right one
-  if(!right){ if(S.sounds) setTimeout(()=>speak(tw(w)), 650); else speak(tw(w)); }
+  // wrong answer: always say the right word; right answer: say it only if it was not heard in the question
+  if(!right || !T.spoke){ if(S.sounds) setTimeout(()=>speak(tw(w)), right?450:650); else speak(tw(w)); }
   save();
   setTimeout(()=>{ T.i++; if(T.i>=T.qs.length) endTest(); else tShow(); }, right?1500:2600);
 }
