@@ -1768,7 +1768,8 @@ const QT = {
   pic2en:'🖼️ Картинка → слово',
   en2pic:'🔤 Слово → картинка',
   say2pic:'👂 Слушаю → картинка',
-  ru2en:'🇷🇺 Перевод → слово'
+  ru2en:'🇷🇺 Перевод → слово',
+  en2ru:'🗣️ Слово → перевод'
 };
 // test words come from the learn screen if we got here from it, otherwise from the home filters
 let lastSection='home';
@@ -1857,6 +1858,7 @@ function tShow(){
   if(type==='en2pic') q.innerHTML = `<div class="muted">Найди картинку</div><div class="en">${esc(tw(w))}</div><button class="say" onclick="speak(tw(T.qs[T.i]))">🔊</button>`;
   if(type==='say2pic') q.innerHTML = `<div class="muted">Послушай и найди картинку</div><button class="say" style="width:110px;height:110px;font-size:52px" onclick="speak(tw(T.qs[T.i]))">🔊</button><div><button onclick="speak(tw(T.qs[T.i]),0.55)">🐢 медленно</button></div>`;
   if(type==='ru2en') q.innerHTML = `<div class="muted">Как сказать ${LG().adv}?</div><div class="en" style="color:var(--pri)">${esc(w.ru)}</div>`;
+  if(type==='en2ru') q.innerHTML = `<div class="muted">Что это значит по-русски?</div><div class="en">${esc(tw(w))}</div><div class="tr">${trHTML(w)}</div><button class="say" onclick="speak(tw(T.qs[T.i]))">🔊</button>`;
   if(type==='say'){
     T.tries = 0;
     q.innerHTML = `<div class="muted">Скажи ${LG().adv}</div>${picHTML(w)}<div class="ru" style="font-size:26px">${esc(w.ru)}</div>
@@ -1867,8 +1869,8 @@ function tShow(){
   }
   const picOpts = type==='en2pic'||type==='say2pic';
   document.getElementById('tOpts').innerHTML = opts.map((o,k)=>
-    `<button class="opt" onclick="answer(${k},this)">${picOpts?picHTML(o):esc(tw(o))}</button>`).join('');
-  if(type==='say2pic'||(type==='en2pic'&&S.autoSay)) setTimeout(()=>speak(tw(w)),250);
+    `<button class="opt" onclick="answer(${k},this)">${picOpts?picHTML(o):type==='en2ru'?esc(o.ru):esc(tw(o))}</button>`).join('');
+  if(type==='say2pic'||((type==='en2pic'||type==='en2ru')&&S.autoSay)) setTimeout(()=>speak(tw(w)),250);
 }
 async function sayTest(){
   const w = T.qs[T.i], btn = document.getElementById('tMic'), res = document.getElementById('tSayRes');
@@ -1907,12 +1909,12 @@ function answer(k, btn){
   else{
     st.bad++; T.mistakes.push(w); btn.classList.add('bad','shake');
     btns[T.opts.findIndex(x=>x.en===w.en)].classList.add('ok');
-    if(picOpts) btn.insertAdjacentHTML('beforeend',`<div style="font-size:16px">${esc(tw(o))}</div>`);
+    if(picOpts || T.type==='en2ru') btn.insertAdjacentHTML('beforeend',`<div style="font-size:16px">${esc(tw(o))}</div>`);
   }
   // show the word under the correct picture
   if(picOpts){const cb=btns[T.opts.findIndex(x=>x.en===w.en)]; cb.insertAdjacentHTML('beforeend',`<div style="font-size:18px">${esc(tw(w))}</div>`)}
-  else document.getElementById('tQ').insertAdjacentHTML('beforeend',`<div class="ru">${esc(w.ru)}</div>`);
-  document.getElementById('tQ').insertAdjacentHTML('beforeend',`<div style="font-size:22px;font-weight:800;margin-top:6px">${esc(tw(w))}</div><div class="tr">${trHTML(w)}</div>`);
+  else if(T.type!=='en2ru') document.getElementById('tQ').insertAdjacentHTML('beforeend',`<div class="ru">${esc(w.ru)}</div>`);
+  if(T.type!=='en2ru') document.getElementById('tQ').insertAdjacentHTML('beforeend',`<div style="font-size:22px;font-weight:800;margin-top:6px">${esc(tw(w))}</div><div class="tr">${trHTML(w)}</div>`);
   sfx(right);
   if(S.sounds) setTimeout(()=>speak(tw(w)), right?450:650); else speak(tw(w));
   save();
